@@ -1,4 +1,6 @@
 # coding=utf-8
+from config import TEXT, IMAGE, LOCATION, LINK, EVENT, MUSIC, NEWS, VOICE, VIDEO
+from common import get_logger
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -11,12 +13,14 @@ class Message(object):
     msg_body
         接收消息的实体
     '''
-    
-    def __init__(self, msg_body):
+    def __init__(self, msg_body=None):
         self._receive = {}
         self._reply = {}
+        self._replyOK=False #回复内容完整flag
         self.items = []
-        self.receiveMsg(msg_body)
+        self.log=get_logger(Message.__name__,'info')
+        if msg_body is not None:
+            self.receiveMsg(msg_body)
     
     #########接收/回复消息#######
     def receiveMsg(self, msg_body):
@@ -24,17 +28,21 @@ class Message(object):
         转化从HTTP接收而来的XML
         '''
         root = ET.fromstring(msg_body)
+        self.log.info('receive: '+msg_body)
         # 微信发来的XML只有一层
         for child in root:
             self._receive[child.tag] = child.text
+        self._reply.update({'ToUserName':self._receive['FromUserName'],
+                            'FromUserName':self._receive['ToUserName']})
         return self
     
     def setReply(self, **arg):
         '''
-        自定义添加回复消息的键值
+        仅供具体类型的消息子类使用,设置回复内容
         '''
         for k, v in arg.items():
             self._reply[k] = v
+        self._replyOK=True #getReply() will check this flag
         return self
     
     def getRev(self):
@@ -55,12 +63,8 @@ class Message(object):
         '''
         获取要发送的消息,自动设置回复时的接收人+发送人+回复时间,返回一个dict或xml的str
         '''
-        assert(self._reply)
-        self._reply.update({
-                     'ToUserName':self._receive['FromUserName'],
-                     'FromUserName':self._receive['ToUserName'],
-                     'CreateTime':'%d' % time()
-                     })
+        assert(self._replyOK)
+        self._reply['CreateTime'] = '%d' % time()
         if toxml:
             return self.reply2XML()
         else:
@@ -68,7 +72,7 @@ class Message(object):
         
     def reply2XML(self, root=None, body=None):
         '''
-        dict => xml,键对应树名,值为str则为树值,非str则为子树
+        dict => xml,键对应树名,值为str则为树值,list则为子树
         怪微信咯,这坑爹的6种XML格式不统一
         '''
         if (body and root) is None:
@@ -77,6 +81,7 @@ class Message(object):
         for k in body:
             tmp = ET.SubElement(root, k)
             if isinstance(body[k], basestring):
+                # 要用unicode赋值
                 tmp.text = body[k]
             else:
                 # now body[k] is a list who is carrying dict
@@ -86,7 +91,7 @@ class Message(object):
                         item = ET.SubElement(tmp, item_tag)
                         self.reply2XML(root=item, body=i)
                 else:
-                    # 非图文消息第2层只有一项
+                    # image,music,voice,video消息的list只有一项
                     self.reply2XML(tmp, body[k][0])
         if root.tag == 'xml':
             return ET.tostring(root, encoding='utf-8')
@@ -94,25 +99,25 @@ class Message(object):
 class TextMsg(Message):
 
     def setReply(self, content):
-        Message.setReply(self, MsgType='text', Content=content)
+        Message.setReply(self, MsgType=TEXT, Content=content)
         return self
     
 class ImageMsg(Message):
     def setReply(self, media_id):
         self.items.append({'MediaId':media_id})
-        Message.setReply(self, MsgType='image', Image=self.items)
+        Message.setReply(self, MsgType=IMAGE, Image=self.items)
         return self
 
 class VoiceMsg(Message):
     def setReply(self, media_id):
         self.items.append({'MediaId':media_id})
-        Message.setReply(self, MsgType='voice', Voice=self.items)
+        Message.setReply(self, MsgType=VOICE, Voice=self.items)
         return self
     
 class VideoMsg(Message):
     def setReply(self, media_id, title, description):
         self.items.append({'MediaId':media_id, 'Title':title, 'Description':description})
-        Message.setReply(self, MsgType='video', Video=self.items)
+        Message.setReply(self, MsgType=VIDEO, Video=self.items)
         return self
     
 class MusicMsg(Message):
@@ -129,7 +134,7 @@ class MusicMsg(Message):
                 del tmp[k]
         self.items.append(tmp)
             
-        Message.setReply(self, MsgType='Music', Music=self.items)
+        Message.setReply(self, MsgType=MUSIC, Music=self.items)
         return self
         
 class NewsMsg(Message):
@@ -138,7 +143,7 @@ class NewsMsg(Message):
     '''
         
     def setReply(self, title, description, picurl, url):
-        self.addItem(title, description, picurl, url)._reply['MsgType'] = 'news'
+        self.addItem(title, description, picurl, url)
         return self
         
     def addItem(self, title, description, picurl, url):
@@ -148,9 +153,8 @@ class NewsMsg(Message):
                            'PicUrl':picurl,
                            'Url':url
                            })
-        Message.setReply(self, Articles=self.items, ArticleCount=str(len(self.items)))
-#         self._reply['Articles']=self.items
-#         self._reply['ArticleCount']=str(len(self.items))
+        if len(self.items) > 10:
+            raise Exception('limit 10 items')
+        Message.setReply(self, MsgType=NEWS, Articles=self.items, ArticleCount=str(len(self.items)))
         return self
-        
         

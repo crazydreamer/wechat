@@ -1,19 +1,19 @@
+#coding=utf-8
 from libs.wechat import Wechat
 import libs.message as message
 from bottle import *
+import json
 
-@post('/')
+main = Bottle()
+
+@main.post('/')
 def reply():
     user_msg=request.body.read()
-    m=message.NewsMsg(user_msg)
-    m.setReply('dddd','aaaa','http','http2').addItem('dddd','aaaa','http','http2').addItem('dddd','aaaa','http','http2')
-    t=message.MusicMsg(user_msg)
-    t.setReply('title',None,None,None,None)
-    print m.getReply()
-    return t.getReply(True)
+    
+    m=message.TextMsg(user_msg)
+    m.setReply(u'哦')
+    return m.getReply(True)
 
-
-main = default_app()
 
 if __name__=='__main__':
     debug(True)
