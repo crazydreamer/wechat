@@ -4,12 +4,8 @@ import json
 import config as conf
 import common
 from time import time
-try:
-    from pylibmc import Client
-    cache = Client()
-except Exception, e:
-    cache = common.Cache()
-    
+
+cache = common.get_cache()  
 get_logger = common.get_logger
 
 class WeChatError(Exception):
@@ -86,7 +82,7 @@ class Wechat(object):
         cache和静态变量保存actoken,若超过存活期则从微信API重新获取
         '''
         timegoes = lambda a, b:a - b
-        if timegoes(time(), cache.get('wc_ac_timestamp')) > conf.AC_TOKEN_EXPIRES_IN:
+        if cache.get('wc_ac_token') is None or timegoes(time(), cache.get('wc_ac_timestamp')) > conf.AC_TOKEN_EXPIRES_IN:
             url = conf.ACCESS_URL % (self.appid, self.appsecret)
             result = self.httpReq(url)
             Wechat.__ac_token = result['access_token']

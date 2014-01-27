@@ -1,10 +1,7 @@
 # coding=utf-8
 from config import TEXT, IMAGE, LOCATION, LINK, EVENT, MUSIC, NEWS, VOICE, VIDEO
 from common import get_logger
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 from time import time
 
 class Message(object):
@@ -16,9 +13,9 @@ class Message(object):
     def __init__(self, msg_body=None):
         self._receive = {}
         self._reply = {}
-        self._replyOK=False #回复内容完整flag
+        self._replyOK = False  # 回复内容完整flag
         self.items = []
-        self.log=get_logger(Message.__name__,'info')
+        self.log = get_logger(Message.__name__, 'info')
         if msg_body is not None:
             self.receiveMsg(msg_body)
     
@@ -27,8 +24,8 @@ class Message(object):
         '''
         转化从HTTP接收而来的XML
         '''
+        self.log.info('receive: ' + msg_body)
         root = ET.fromstring(msg_body)
-        self.log.info('receive: '+msg_body)
         # 微信发来的XML只有一层
         for child in root:
             self._receive[child.tag] = child.text
@@ -42,7 +39,12 @@ class Message(object):
         '''
         for k, v in arg.items():
             self._reply[k] = v
-        self._replyOK=True #getReply() will check this flag
+        self._replyOK = True  # getReply() will check this flag
+        return self
+    
+    def cleanReplyItems(self):
+        self._replyOK = False
+        self.items=[]
         return self
     
     def getRev(self):
@@ -96,6 +98,20 @@ class Message(object):
         if root.tag == 'xml':
             return ET.tostring(root, encoding='utf-8')
         
+    ###########类属性#########
+    @property
+    def msgtype(self):
+        return self._receive['MsgType']
+    @property
+    def fromusername(self):
+        return self._receive['FromUserName']
+    @property
+    def tousername(self):
+        return self._receive['ToUserName']
+    @property
+    def createtime(self):
+        return self._receive['CreateTime']
+        
 class TextMsg(Message):
 
     def setReply(self, content):
@@ -139,14 +155,9 @@ class MusicMsg(Message):
         
 class NewsMsg(Message):
     '''
-    可链式调用addItem方法继续增加图文:news.setReply(...).addItem(...).addItem(...)
+    可多次调用setReply方法继续增加图文:news.setReply(...).setReply(...).setReply(...)
     '''
-        
     def setReply(self, title, description, picurl, url):
-        self.addItem(title, description, picurl, url)
-        return self
-        
-    def addItem(self, title, description, picurl, url):
         self.items.append({
                            'Title':title,
                            'Description':description,
