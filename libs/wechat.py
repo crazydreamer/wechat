@@ -1,5 +1,5 @@
 # coding=utf-8
-import urllib2
+from urllib2 import urlopen
 import json
 import config as conf
 import common
@@ -69,9 +69,9 @@ class Wechat(object):
         '''
         发送http请求,根据data是否为空发送GET or POST,返回一个由微信产生的json转换的dict
         '''
-        if isinstance(data, basestring):
-            data = json.dumps(data, ensure_ascii=False)
-        resp = urllib2.urlopen(url, data)
+        if data is not None and isinstance(data, basestring) is False:
+            data = json.dumps(data, ensure_ascii=False).encode('utf8')
+        resp = urlopen(str(url), data) # maybe url is unicode
         result = json.load(resp)
         self.log.info(url[:100] + '... response: ' + `result`)
         self._checkError(result)
@@ -124,16 +124,12 @@ class Wechat(object):
         
     
     #######自定义菜单######
-    def createMenu(self, fp=None, **menu):
+    def createMenu(self, menu):
         '''
-        传入流对象或者一个dict,转化成json以调用请求
+        menu -- a dict such as : {'button':[Button(),,,]}
         '''
-        if fp:
-            data = fp.read()
-        else:
-            data = json.dumps(menu, ensure_ascii=False)
-        url = conf.MENU_CREATE_URL % Wechat.__ac_token        
-        self.httpReq(url, data)
+        url = conf.MENU_CREATE_URL % Wechat.__ac_token
+        self.httpReq(url, menu)
         return self
         
     def getMenu(self):
@@ -282,3 +278,45 @@ class Wechat(object):
         根据ticket获取二维码图片url
         '''
         return conf.QRCODE_IMG_URL % ticket  # url str
+
+
+class Button(dict):
+    """
+    创建自定义菜单时使用:menu={'button':[Button(),,,]}
+    """
+    def __init__(self, name, type_ = None, value = None):
+        self['name'] = name
+        if type_ and value:
+            self.setEffect(type_,value)
+        
+    def setEffect(self,type_,value):
+        '''
+        value -- it is key or url
+        e.g.
+        {
+           "type":"click",
+           "name":"赞一下我们",
+           "key":"V1001_GOOD"
+        }
+        '''
+        if self.has_key('sub_button'):
+            raise WeChatError('sub_button only have name attribute')
+        self['type'] = type_
+        if 'click' == type_:
+            self['key'] = value
+        elif 'view' == type_:
+            self['url'] = value
+
+    def addSubButton(self,button):
+        '''
+        b.addSubButton(Button('xxx','view','http://z.cn'))
+        '''
+        if button is self :
+            raise WeChatError('sub_button not allow itself!')
+        if self.has_key('type'):
+            tmp=self['name']
+            self.clear()
+            self['name']=tmp
+        if self.get('sub_button') is None:
+            self['sub_button']=[]
+        self['sub_button'].append(button)

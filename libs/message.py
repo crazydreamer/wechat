@@ -1,6 +1,7 @@
 # coding=utf-8
 from config import TEXT, IMAGE, LOCATION, LINK, EVENT, MUSIC, NEWS, VOICE, VIDEO
-from common import get_logger
+from wechat import get_logger
+from wechat import WeChatError
 import xml.etree.ElementTree as ET
 from time import time
 
@@ -157,6 +158,7 @@ class NewsMsg(Message):
     '''
     可多次调用setReply方法继续增加图文:news.setReply(...).setReply(...).setReply(...)
     '''
+        
     def setReply(self, title, description, picurl, url):
         self.items.append({
                            'Title':title,
@@ -165,7 +167,7 @@ class NewsMsg(Message):
                            'Url':url
                            })
         if len(self.items) > 10:
-            raise Exception('limit 10 items')
+            raise WeChatError('news message limit 10 items')
         Message.setReply(self, MsgType=NEWS, Articles=self.items, ArticleCount=str(len(self.items)))
         return self
         

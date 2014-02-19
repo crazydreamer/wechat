@@ -1,14 +1,16 @@
 import logging
 
+API_KEY = ''
+SECRET_KEY = ''
+
 def get_logger(name, level='debug'):
     logger = logging.getLogger(name)
     level=eval('logging.'+level.upper())
     logger.setLevel(level)
     if not logger.handlers:
         try:
-            #require to replace with your available one
             from bae_log import handlers
-            handler = handlers.BaeLogHandler(ak='',sk='')
+            handler = handlers.BaeLogHandler(ak = API_KEY, sk = SECRET_KEY,bufcount = 1)
         except Exception, e:
             handler = logging.StreamHandler()
 
@@ -18,7 +20,7 @@ def get_logger(name, level='debug'):
 
 class Cache(object):
     '''
-    just a local cache in single process
+    just a local cache
     '''
     __tmp={}
     def get(self,key):
@@ -29,13 +31,10 @@ class Cache(object):
 
 def get_cache():
     try:
-        #require to replace with your available one
         from bae_memcache import BaeMemcache
         cache_id = ''
         cache_addr = ''
-        api_key = ''
-        secret_key = ''
-        cache = BaeMemcache(cache_id, cache_addr, api_key, secret_key)
+        cache = BaeMemcache(cache_id, cache_addr, API_KEY, SECRET_KEY)
     except Exception, e:
         cache = Cache()
     return cache
