@@ -1,5 +1,5 @@
 # coding=utf-8
-from config import TEXT, IMAGE, LOCATION, LINK, EVENT, MUSIC, NEWS, VOICE, VIDEO
+from config import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from wechat import get_logger
 from wechat import WeChatError
 import xml.etree.ElementTree as ET
@@ -11,21 +11,22 @@ class Message(object):
     msg_body
         接收消息的实体
     '''
-    def __init__(self, msg_body=None):
+    def __init__(self, msg_body=None, log=False):
         self._receive = {}
         self._reply = {}
         self._replyOK = False  # 回复内容完整flag
         self.items = []
-        self.log = get_logger(Message.__name__, 'info')
+        self.log = get_logger(Message.__name__, 'debug')
         if msg_body is not None:
-            self.receiveMsg(msg_body)
+            self.receiveMsg(msg_body, log)
     
     #########接收/回复消息#######
-    def receiveMsg(self, msg_body):
+    def receiveMsg(self, msg_body, log):
         '''
         转化从HTTP接收而来的XML
         '''
-        self.log.info('receive: ' + msg_body)
+        if log:
+            self.log.info('receive: ' + msg_body)
         root = ET.fromstring(msg_body)
         # 微信发来的XML只有一层
         for child in root:
@@ -45,12 +46,12 @@ class Message(object):
     
     def cleanReplyItems(self):
         self._replyOK = False
-        self.items=[]
+        self.items = []
         return self
     
-    def getRev(self):
+    def getRev(self, *arg):
         '''
-        获取已接收的消息,返回一个dict
+        获取已接收的消息,返回一个dict;若参数含有消息键,则返回对应键值的list
         return 
             ToUserName    开发者微信号
             FromUserName     发送方帐号（一个OpenID）
@@ -60,7 +61,17 @@ class Message(object):
             MsgId     消息id，64位整型
         '''
         assert(self._receive)
-        return self._receive
+        arglen = len(arg)
+        
+        if arglen == 0:
+            return self._receive
+        elif arglen == 1 :
+            return self._receive[arg[0]]
+        else:
+            r = []
+            for i in arg:
+                r.append(self._receive[i])
+            return r
             
     def getReply(self, toxml=False):
         '''

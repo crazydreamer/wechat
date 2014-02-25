@@ -1,16 +1,16 @@
 import logging
 
-API_KEY = ''
-SECRET_KEY = ''
+API_KEY = '9nKlr1w9g1TVWQfciEvl2c3v'
+SECRET_KEY = 'RGRQxmxOdgNTYyRG3EPMkQth9KhBdFlG'
 
 def get_logger(name, level='debug'):
     logger = logging.getLogger(name)
-    level=eval('logging.'+level.upper())
+    level = eval('logging.' + level.upper())
     logger.setLevel(level)
     if not logger.handlers:
         try:
             from bae_log import handlers
-            handler = handlers.BaeLogHandler(ak = API_KEY, sk = SECRET_KEY,bufcount = 1)
+            handler = handlers.BaeLogHandler(ak=API_KEY, sk=SECRET_KEY)
         except Exception, e:
             handler = logging.StreamHandler()
 
@@ -22,18 +22,18 @@ class Cache(object):
     '''
     just a local cache
     '''
-    __tmp={}
-    def get(self,key):
+    __tmp = {}
+    def get(self, key):
         return self.__tmp.get(key)
     
-    def set(self,key,value):
-        self.__tmp[key]=value
+    def set(self, key, value):
+        self.__tmp[key] = value
 
 def get_cache():
     try:
         from bae_memcache import BaeMemcache
-        cache_id = ''
-        cache_addr = ''
+        cache_id = "gVRadxnbppRuZdJJRHRx"
+        cache_addr = "cache.duapp.com:20243"
         cache = BaeMemcache(cache_id, cache_addr, API_KEY, SECRET_KEY)
     except Exception, e:
         cache = Cache()

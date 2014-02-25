@@ -57,7 +57,7 @@ class Wechat(object):
         
     def _checkError(self, result):
         '''
-        检查微信响应的信息有无错误,无错则返回self
+        检查微信响应的信息有无错误(微信总是响应"{"开头的json),无错则返回self
         '''
         assert(result)
         if result.has_key('errcode') and result['errcode'] != 0:
@@ -71,9 +71,9 @@ class Wechat(object):
         '''
         if data is not None and isinstance(data, basestring) is False:
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
-        resp = urlopen(str(url), data) # maybe url is unicode
-        result = json.load(resp)
-        self.log.info(url[:100] + '... response: ' + `result`)
+        resp = urlopen(str(url), data).read()  # maybe url is unicode
+        self.log.info('Response: ' + `resp` + ' FROM ' + url[:100])
+        result = json.loads(resp)
         self._checkError(result)
         return result
         
@@ -284,12 +284,12 @@ class Button(dict):
     """
     创建自定义菜单时使用:menu={'button':[Button(),,,]}
     """
-    def __init__(self, name, type_ = None, value = None):
+    def __init__(self, name, type_=None, value=None):
         self['name'] = name
         if type_ and value:
-            self.setEffect(type_,value)
+            self.setEffect(type_, value)
         
-    def setEffect(self,type_,value):
+    def setEffect(self, type_, value):
         '''
         value -- it is key or url
         e.g.
@@ -307,16 +307,16 @@ class Button(dict):
         elif 'view' == type_:
             self['url'] = value
 
-    def addSubButton(self,button):
+    def addSubButton(self, button):
         '''
         b.addSubButton(Button('xxx','view','http://z.cn'))
         '''
         if button is self :
             raise WeChatError('sub_button not allow itself!')
         if self.has_key('type'):
-            tmp=self['name']
+            tmp = self['name']
             self.clear()
-            self['name']=tmp
+            self['name'] = tmp
         if self.get('sub_button') is None:
-            self['sub_button']=[]
+            self['sub_button'] = []
         self['sub_button'].append(button)
