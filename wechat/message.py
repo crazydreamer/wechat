@@ -1,29 +1,39 @@
 # coding=utf-8
-from config import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
+from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from wechat import get_logger
-from wechat import WeChatError
+from wechat import WechatError
 import xml.etree.ElementTree as ET
 from time import time
 
 class Message(object):
     '''
-    设置回复消息请用对应类型的子类,使用子类setReply方法设置消息的各项参数
-    msg_body
-        接收消息的实体
+    设置回复消息请用对应类型的子类
+    @attention: 对于微信传来的XML,Event键值统一转为小写
+    @see: http://mp.weixin.qq.com/wiki/index.php?title=%E6%8E%A5%E6%94%B6%E6%99%AE%E9%80%9A%E6%B6%88%E6%81%AF
     '''
-    def __init__(self, msg_body=None, log=False):
+    def __init__(self, msg=None, log=False):
+        '''
+        默认新建一个空实例,消息内容通常在子类的setReply方法中设置
+        @param msg: 消息的XML实体,用于将其转换为可操作类型
+        @param log: 是否将接收到的XML记录到日志        
+        '''
         self._receive = {}
         self._reply = {}
         self._replyOK = False  # 回复内容完整flag
-        self.items = []
-        self.log = get_logger(Message.__name__, 'debug')
-        if msg_body is not None:
-            self.receiveMsg(msg_body, log)
+        self.items = []  # 通常为用户可见的消息实体
+        if __debug__:
+            self.log = get_logger(Message.__name__, 'debug')
+        else:
+            self.log = get_logger(Message.__name__, 'info')
+        if msg is not None:
+            self.receiveMsg(msg, log)
     
     #########接收/回复消息#######
     def receiveMsg(self, msg_body, log):
         '''
         转化从HTTP接收而来的XML
+        @param msg: 消息的XML实体,用于将其转换为可操作类型
+        @param log: 是否将接收到的XML记录到日志
         '''
         if log:
             self.log.info('receive: ' + msg_body)
@@ -31,20 +41,47 @@ class Message(object):
         # 微信发来的XML只有一层
         for child in root:
             self._receive[child.tag] = child.text
-        self._reply.update({'ToUserName':self._receive['FromUserName'],
-                            'FromUserName':self._receive['ToUserName']})
+            
+        if self._receive.has_key('Event'):
+            self._receive['Event']=self._receive['Event'].lower()
+        self.setReplyTo(self)
         return self
     
     def setReply(self, **arg):
         '''
         仅供具体类型的消息子类使用,设置回复内容
         '''
+        if arg.get('MsgType') != TEXT:
+            assert(self.items)
         for k, v in arg.items():
             self._reply[k] = v
         self._replyOK = True  # getReply() will check this flag
         return self
     
+    def setReplyTo(self,msg):
+        '''
+        根据接收消息设置回复消息的fromusername/tousername
+        若Message实例化时未传入XML实体,则需要手动调用此方法
+        '''
+        self._reply.update({'ToUserName':msg.fromusername,'FromUserName':msg.tousername})
+        return self
+    
+    
+    def updateReplyItems(self, **item):
+        '''
+        设置回复消息的items项,并去除其中的非必填项(值为None)
+        '''
+        for k, v in item.items():
+            if v is None:
+                del item[k]
+        self.items.append(item)
+        #return None
+        
+    
     def cleanReplyItems(self):
+        '''
+        清除已设置的回复消息items
+        '''
         self._replyOK = False
         self.items = []
         return self
@@ -52,7 +89,7 @@ class Message(object):
     def getRev(self, *arg):
         '''
         获取已接收的消息,返回一个dict;若参数含有消息键,则返回对应键值的list
-        return 
+        @return: 
             ToUserName    开发者微信号
             FromUserName     发送方帐号（一个OpenID）
             CreateTime     消息创建时间 （整型）
@@ -75,14 +112,18 @@ class Message(object):
             
     def getReply(self, toxml=False):
         '''
-        获取要发送的消息,自动设置回复时的接收人+发送人+回复时间,返回一个dict或xml的str
+        获取要回复的消息,设置回复时间
+        @param toxml:是否将回复内容以xml格式返回(str型),默认返回dict
         '''
         assert(self._replyOK)
+        if self._reply.get('ToUserName') is None:
+            raise WechatError('do not find which user to reply!')
         self._reply['CreateTime'] = '%d' % time()
         if toxml:
             return self.reply2XML()
         else:
             return self._reply
+        
         
     def reply2XML(self, root=None, body=None):
         '''
@@ -113,16 +154,16 @@ class Message(object):
     ###########类属性#########
     @property
     def msgtype(self):
-        return self._receive['MsgType']
+        return self._receive.get('MsgType')
     @property
     def fromusername(self):
-        return self._receive['FromUserName']
+        return self._receive.get('FromUserName')
     @property
     def tousername(self):
-        return self._receive['ToUserName']
+        return self._receive.get('ToUserName')
     @property
     def createtime(self):
-        return self._receive['CreateTime']
+        return self._receive.get('CreateTime')
         
 class TextMsg(Message):
 
@@ -150,18 +191,13 @@ class VideoMsg(Message):
     
 class MusicMsg(Message):
     def setReply(self, title, description, musicurl, hqmusicurl, thumbmediaid):
-        tmp = {
-                'Title':title,
-                'Description':description,
-                'MusicUrl':musicurl,
-                'HQMusicUrl':hqmusicurl,
-                'ThumbMediaId':thumbmediaid
-               }
-        for k, v in tmp.items():
-            if v is None:
-                del tmp[k]
-        self.items.append(tmp)
-            
+        self.updateReplyItems(
+            Title=title,
+            Description=description,  # can be None
+            MusicUrl=musicurl,
+            HQMusicUrl=hqmusicurl,  # can be None
+            ThumbMediaId=thumbmediaid  # can be None
+            )
         Message.setReply(self, MsgType=MUSIC, Music=self.items)
         return self
         
@@ -171,14 +207,13 @@ class NewsMsg(Message):
     '''
         
     def setReply(self, title, description, picurl, url):
-        self.items.append({
-                           'Title':title,
-                           'Description':description,
-                           'PicUrl':picurl,
-                           'Url':url
-                           })
+        '''
+        4个参数均为非必须
+        '''
+        self.updateReplyItems(Title=title, Description=description, PicUrl=picurl, Url=url)
+       
         if len(self.items) > 10:
-            raise WeChatError('news message limit 10 items')
+            raise WechatError('news message limit 10 items')
         Message.setReply(self, MsgType=NEWS, Articles=self.items, ArticleCount=str(len(self.items)))
         return self
         
