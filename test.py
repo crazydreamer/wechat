@@ -1,6 +1,6 @@
 #coding=utf-8
-from libs.wechat import Wechat
-import libs.message as message
+from wechat.wechat import Wechat
+import wechat.message as message
 from bottle import *
 import json
 
