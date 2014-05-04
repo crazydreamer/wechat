@@ -1,17 +1,4 @@
 ##############
-# msg type   #
-##############
-TEXT = 'text'
-IMAGE = 'image'
-LOCATION = 'location'
-LINK = 'link'
-EVENT = 'event'
-MUSIC = 'music'
-NEWS = 'news'
-VOICE = 'voice'
-VIDEO = 'video'
-
-##############
 # API URL    #
 ##############
 
@@ -44,6 +31,9 @@ OAUTH_USERINFO_URL = 'https://api.weixin.qq.com/sns/userinfo?access_token={acces
 
 QRCODE_CREATE_URL = API_URL_PREFIX + '/qrcode/create?access_token=%s'
 QRCODE_IMG_URL = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=%s'  
+
+FILE_UPLOAD_URL = 'http://file.api.weixin.qq.com/cgi-bin/media/upload?access_token=%s&type=%s'
+FILE_DOWNLOAD_URL = 'http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s'
 
 AC_TOKEN_EXPIRES_IN = 7200
 OAUTH_AC_TOKEN_EXPIRES_IN = 7200

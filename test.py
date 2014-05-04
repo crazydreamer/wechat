@@ -1,6 +1,6 @@
 #coding=utf-8
-from libs.wechat import Wechat
-import libs.message as message
+from wechat.wechat import Wechat
+import wechat.message as message
 from bottle import *
 import json
 
@@ -11,10 +11,10 @@ def reply():
     user_msg=request.body.read()
     response.set_header('Content-Type', 'text/xml; charset=UTF-8')
     
-    m=message.NewsMsg(user_msg)
-    m.setReply(u'哦',u'纳尼','http://z.cn','http://z.cn').cleanReplyItems().setReply(u'哦',u'纳尼','http://z.cn','http://z.cn').setReply(u'哦',u'纳尼','http://z.cn','http://z.cn')
+    m=message.Message(user_msg)
+    m.newsReply(u'哦',u'纳尼','http://z.cn','http://z.cn').newsReply(u'哦',u'纳尼','http://z.cn','http://z.cn').newsReply(u'哦',u'纳尼','http://z.cn','http://z.cn')
     
-    return m.getReply(True)
+    return m.getReply()
 
 
 if __name__=='__main__':
