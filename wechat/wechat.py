@@ -26,6 +26,7 @@ def valid(token, signature, timestamp, nonce):
     else:
         raise WechatError('valid failed!')
 
+
 class WechatError(Exception):
     '''
     抛出异常并记录日志
@@ -45,7 +46,7 @@ class Wechat(object):
     
     __ac_token = None
     
-    def __init__(self, appid, appsecret, token):
+    def __init__(self, appid, appsecret):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
@@ -54,7 +55,6 @@ class Wechat(object):
         else:
             self.log = get_logger(Wechat.__name__, 'info')
         self._errcode = None
-        self.token = token
         self.appid = appid
         self.appsecret = appsecret
         self.refreshACtoken()
@@ -87,9 +87,8 @@ class Wechat(object):
         '''
         cache和静态变量保存actoken,若超过存活期则从微信API重新获取
         '''
-        timegoes = lambda a, b:a - b
-        if force or cache.get('wc_ac_token') is None or \
-        timegoes(time(), cache.get('wc_ac_timestamp')) > conf.AC_TOKEN_EXPIRES_IN:
+        if force or cache.get('wc_ac_token') is None \
+                or (time() - cache.get('wc_ac_timestamp')) > conf.AC_TOKEN_EXPIRES_IN:
             url = conf.ACCESS_URL % (self.appid, self.appsecret)
             result = self._httpReq(url)
             Wechat.__ac_token = result['access_token']
@@ -259,32 +258,32 @@ class Wechat(object):
         url = conf.OAUTH_USERINFO_URL.format(access_token=token, openid=openid, lang='zh_CN')
         return self._httpReq(url)
     
+
     
     #####带参数二维码#####
-    def getQRTicket(self, id_, forever=False, expire=1800):
+    def getQRImage(self, id_, forever=False, expire=1800):
         '''
-        申请临时二维码或永久二维码的ticket
+        根据ticket获取二维码图片url
         id_ -- 场景值ID，临时二维码时为32位非0整型，永久二维码时最大值为100000（目前参数只支持1--100000）
         forever -- 申请永久二维码则为True
         expire -- 该二维码有效时间，以秒为单位。 最大不超过1800。
-        return
-            {"ticket":"_____","expire_seconds":_____}
         '''
-        url = conf.QRCODE_CREATE_URL % Wechat.__ac_token
-        data = {"action_info": {"scene": {"scene_id": id_}}}
-        if forever:
-            data['action_name'] = 'QR_LIMIT_SCENE'
-        else:
-            data['action_name'] = 'QR_SCENE'
-            data['expire_seconds'] = expire
-        return self._httpReq(url, data)
-    
-    def getQRImage(self, ticket):
-        '''
-        根据ticket获取二维码图片(实体)
-        '''
-        url = conf.QRCODE_IMG_URL % ticket
-        return urlopen(url).read()
+        def getQRTicket():
+            '''
+            申请临时二维码或永久二维码的ticket
+            return
+                {"ticket":"_____","expire_seconds":_____}
+            '''
+            url = conf.QRCODE_CREATE_URL % Wechat.__ac_token
+            data = {"action_info": {"scene": {"scene_id": id_}}}
+            if forever:
+                data['action_name'] = 'QR_LIMIT_SCENE'
+            else:
+                data['action_name'] = 'QR_SCENE'
+                data['expire_seconds'] = expire
+            return self._httpReq(url, data)
+        url = conf.QRCODE_IMG_URL % getQRTicket()['ticket']
+        return url
         
     #######多媒体上传/下载########
     def uploadMedia(self, type_, data):
@@ -356,3 +355,6 @@ class Button(dict):
         if self.get('sub_button') is None:
             self['sub_button'] = []
         self['sub_button'].append(button)
+
+
+wc = Wechat('wx5818f8be30f01b6f','3cc07f434ec80b41be9559d4bcff9d31')
