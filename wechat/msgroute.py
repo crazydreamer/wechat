@@ -21,6 +21,7 @@ class MsgRoute(object):
     def reply(self,msg):
         '''
         根据接收的消息类型和触发关键字调用回调函数.
+        注意:对于扫二维码,未关注和已关注的EventKey值的格式不一样,未关注为"qrscene_<id>",已关注则为"<id>",请随时参考微信坑爹的官方文档
         :param msg: 一个Message对象
         :return: 最终响应给微信的消息内容(xml格式),若路由里不存在已定义的类型则返回空串
         '''
@@ -53,3 +54,4 @@ class MsgRoute(object):
     def click(self,*keywords):return self.match(event['click'],*keywords)
     def location(self,*keywords):return self.match(LOCATION,*keywords)
     def subscribe(self,*keywords):return self.match(event['subscribe'],*keywords)
+    def scan(self,*keywords):return self.match(event['scan'],*keywords)
