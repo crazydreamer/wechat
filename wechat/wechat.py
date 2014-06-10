@@ -57,7 +57,7 @@ class Wechat(object):
         self._errcode = None
         self.appid = appid
         self.appsecret = appsecret
-        self.refreshACtoken()
+        # self.refreshACtoken()
         
     ######通用方法######
         
