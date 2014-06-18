@@ -60,7 +60,7 @@ class MsgRoute(object):
             return callback
         return wrapper
 
-    #未定义的类型或关键字都使用此响应
+    #未定义的类型或未定义默认关键字都匹配此响应
     def undefine(self):return self.match('undefine')
 
     def text(self,*keywords):return self.match(TEXT,*keywords)
