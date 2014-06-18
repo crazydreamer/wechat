@@ -19,18 +19,23 @@ class MsgRoute(object):
         self.msg=Message()
 
 
-    def reply(self,raw_msg):
+    def reply(self,msg,**kw):
         '''
         根据接收的消息类型和触发关键字调用回调函数.
         注意:对于扫二维码,未关注和已关注的EventKey值的格式不一样,未关注为"qrscene_<id>",已关注则为"<id>",请随时参考微信坑爹的官方文档
-        :param raw_msg: 原生XML消息
+        :param msg: 原生XML消息或Message实例
+        :param kw: 回复时用到的外部参数
         :return: 最终响应给微信的消息内容(xml格式),若路由里不存在已定义的类型则返回空串
         '''
-        self.msg=Message(raw_msg,True)
+        if type(msg) == Message:
+            self.msg=msg
+        else:
+            self.msg=Message(msg,True)
         keyword_tag = self.keyword_tags.get(self.msg.msgtype)
         keyword = self.msg.getRev(keyword_tag)
         routetype = self.msg.msgtype if self.msg.msgtype in self.route else 'undefine'
-        return self.route[routetype].get(keyword,self.route[routetype][None])()
+        callback = self.route[routetype].get(keyword) or self.route[routetype][None]
+        return callback(**kw)
 
 
     def match(self,msgtype,*keywords):
