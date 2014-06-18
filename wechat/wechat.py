@@ -79,7 +79,7 @@ class Wechat(object):
         if data is not None and not isinstance(data, basestring) :
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.info('WeChat response: ' + resp + os.linesep + 'FROM: ' + url[:55])
+        self.log.info('WeChat response: ' + resp + os.linesep + 'FROM: ' + url.split('?')[0])
         result = json.loads(resp)
         return self._checkError(result)
         
