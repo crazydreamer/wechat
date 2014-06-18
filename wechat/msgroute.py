@@ -1,5 +1,6 @@
 # coding=utf-8
 from msgtype import *
+from message import Message
 
 class MsgRoute(object):
     '''
@@ -15,20 +16,20 @@ class MsgRoute(object):
     def __init__(self):
         self.route = {'undefine':{None: lambda :''}}
         self.keyword_tags={TEXT:'Content',event['click']:'EventKey',event['scan']:'EventKey'}
-        self.msg=None
+        self.msg=Message()
 
 
-    def reply(self,msg):
+    def reply(self,raw_msg):
         '''
         根据接收的消息类型和触发关键字调用回调函数.
         注意:对于扫二维码,未关注和已关注的EventKey值的格式不一样,未关注为"qrscene_<id>",已关注则为"<id>",请随时参考微信坑爹的官方文档
-        :param msg: 一个Message对象
+        :param raw_msg: 原生XML消息
         :return: 最终响应给微信的消息内容(xml格式),若路由里不存在已定义的类型则返回空串
         '''
-        self.msg=msg
-        keyword_tag = self.keyword_tags.get(msg.msgtype)
-        keyword = msg.getRev(keyword_tag)
-        routetype = msg.msgtype if msg.msgtype in self.route else 'undefine'
+        self.msg=Message(raw_msg,True)
+        keyword_tag = self.keyword_tags.get(self.msg.msgtype)
+        keyword = self.msg.getRev(keyword_tag)
+        routetype = self.msg.msgtype if self.msg.msgtype in self.route else 'undefine'
         return self.route[routetype].get(keyword,self.route[routetype][None])()
 
 
