@@ -14,7 +14,7 @@ class MsgRoute(object):
         }
     '''
     def __init__(self):
-        self.route = {'undefine':{None: lambda :''}}
+        self.route = {}
         self.keyword_tags={TEXT:'Content',event['click']:'EventKey',event['scan']:'EventKey'}
         self.msg=Message()
 
@@ -34,8 +34,12 @@ class MsgRoute(object):
         keyword_tag = self.keyword_tags.get(self.msg.msgtype)
         keyword = self.msg.getRev(keyword_tag)
         routetype = self.msg.msgtype if self.msg.msgtype in self.route else 'undefine'
-        callback = self.route[routetype].get(keyword) or self.route[routetype][None]
-        return callback(**kw)
+        try:
+            callback = self.route[routetype].get(keyword) or self.route[routetype][None]
+        except KeyError:
+            return (self.route['undefine'][None])()
+        else:
+            return callback(**kw)
 
 
     def match(self,msgtype,*keywords):
@@ -55,6 +59,9 @@ class MsgRoute(object):
                 self.route[msgtype][None] = callback
             return callback
         return wrapper
+
+    #未定义的类型或关键字都使用此响应
+    def undefine(self):return self.match('undefine')
 
     def text(self,*keywords):return self.match(TEXT,*keywords)
     def click(self,*keywords):return self.match(event['click'],*keywords)
