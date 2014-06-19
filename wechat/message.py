@@ -34,7 +34,7 @@ class Message(object):
         :param log: 是否将接收到的XML记录到日志
         '''
         if log:
-            self.log.info('receive: ' + raw_msg)
+            self.log.info('receive:\n' + raw_msg)
         root = ET.fromstring(raw_msg)
         # 微信发来的XML只有一层
         for child in root:
