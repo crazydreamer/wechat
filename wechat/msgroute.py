@@ -19,7 +19,7 @@ class MsgRoute(object):
         self.msg=Message()
 
 
-    def reply(self,msg,**kw):
+    def reply(self,msg,*args,**kw):
         '''
         根据接收的消息类型和触发关键字调用回调函数.
         注意:对于扫二维码,未关注和已关注的EventKey值的格式不一样,未关注为"qrscene_<id>",已关注则为"<id>",请随时参考微信坑爹的官方文档
@@ -39,7 +39,7 @@ class MsgRoute(object):
         except KeyError:
             return (self.route['undefine'][None])()
         else:
-            return callback(**kw)
+            return callback(*args,**kw)
 
 
     def match(self,msgtype,*keywords):
