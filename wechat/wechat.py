@@ -4,6 +4,7 @@ reload(os.sys)
 os.sys.setdefaultencoding('utf8')
 from urllib2 import urlopen
 import json
+from hashlib import sha1
 import config as conf
 import common
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
@@ -16,11 +17,10 @@ def valid(token, signature, timestamp, nonce):
     '''
     验证消息真实性,每次开发者接收用户消息的时候，微信也都会带上前面三个参数
     '''
-    import hashlib
     tmpList = [token, timestamp, nonce]
     tmpList.sort()
     tmpstr = "%s%s%s" % tuple(tmpList)
-    hashstr = hashlib.sha1(tmpstr).hexdigest()
+    hashstr = sha1(tmpstr).hexdigest()
     if hashstr == signature:
         return True
     else:
