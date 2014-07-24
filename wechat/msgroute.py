@@ -17,7 +17,7 @@ class MsgRoute(object):
     '''
     def __init__(self):
         self.route = {'undefine': {
-            None: lambda x: ''
+            None: lambda : ''
         }}
         self.keyword_tags={TEXT:'Content',event['click']:'EventKey',event['scan']:'EventKey'}
         self.msg=Message()
@@ -39,9 +39,10 @@ class MsgRoute(object):
         keyword = self.msg.getRev(keyword_tag)
         routetype = self.msg.msgtype
         try:
-            callback = self.route[routetype].get(keyword.lower()) or self.route[routetype][None]
+            keyword = keyword.lower() if keyword else None
+            callback = self.route[routetype].get(keyword) or self.route[routetype][None]
         except KeyError:
-            return (self.route['undefine'][None])()
+            return (self.route['undefine'][None])(*args,**kw)
         else:
             return callback(*args,**kw)
 
