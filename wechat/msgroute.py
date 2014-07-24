@@ -16,8 +16,8 @@ class MsgRoute(object):
     P.S. 未定义的消息类型为undefine,已定义消息类型未定义关键字为"msgtype:{None:callback}"
     '''
     def __init__(self):
-        self.route = {'undefine':{
-            None:lambda x:''
+        self.route = {'undefine': {
+            None: lambda x: ''
         }}
         self.keyword_tags={TEXT:'Content',event['click']:'EventKey',event['scan']:'EventKey'}
         self.msg=Message()
@@ -58,7 +58,7 @@ class MsgRoute(object):
                 self.route[msgtype]={}
             if keywords:
                 for keyword in keywords:
-                    self.route[msgtype][keyword] = callback
+                    self.route[msgtype][keyword.lower()] = callback
             else:
                 self.route[msgtype][None] = callback
             return callback
