@@ -24,7 +24,7 @@ def valid(token, signature, timestamp, nonce):
     if hashstr == signature:
         return True
     else:
-        raise False
+        return False
 
 
 class WechatError(Exception):
