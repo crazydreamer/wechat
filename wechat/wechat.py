@@ -9,6 +9,7 @@ import config as conf
 import common
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
+from hashlib import md5
 
 cache = common.get_cache()  
 get_logger = common.get_logger
@@ -25,6 +26,23 @@ def valid(token, signature, timestamp, nonce):
         return True
     else:
         return False
+
+def url_bind(openid,secret_key='whosyourdaddy'):
+    '''
+    微信端打开页面时用于传递openid
+    :param openid:
+    :return: url参数dict
+    '''
+    timestamp=str(int(time()))
+    hash=md5(openid+timestamp+secret_key).hexdigest()
+    return dict(openid=openid,t=timestamp,h=hash)
+
+def url_valid(openid,t,h,secret_key='whosyourdaddy',expire=3600):
+    hash=md5(openid+t+secret_key).hexdigest()
+    now=int(time())
+    if h == hash and now - int(t) < expire:
+        return True
+
 
 
 class WechatError(Exception):
