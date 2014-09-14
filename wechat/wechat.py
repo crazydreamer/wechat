@@ -249,15 +249,17 @@ class Wechat(object):
             scope = 'snsapi_userinfo'
         else:
             scope = 'snsapi_base'  # 不弹出授权页面，直接跳转，只能获取用户openid
-        arg = dict(appid=self.appid, uri=redirect_uri, state=state, scope=scope, code='code')
-        return conf.OAUTH_AUTHORIZE_URL.format(**arg)  # url str
+        #appid, uri, code, scope, state
+        arg = self.appid, redirect_uri, state, scope, 'code'
+        return conf.OAUTH_AUTHORIZE_URL % arg
         
     def getOauthAccessToken(self, oauth_code):
         '''
         用户同意授权后,重定向会带着code参数,可通过code获取oauth_access_token与openid
         '''
-        arg = dict(appid=self.appid, secret=self.appsecret, code=oauth_code, grant_type='authorization_code')
-        url = conf.OAUTH_TOKEN_URL.format(**arg)
+        #appid, secret, code, grant_type
+        arg = self.appid, self.appsecret, oauth_code, 'authorization_code'
+        url = conf.OAUTH_TOKEN_URL % arg
         return self._httpReq(url)
         
     def getOauthRefreshToken(self, token):
@@ -265,15 +267,18 @@ class Wechat(object):
         当oauth_access_token超时后，可以使用refresh_token进行刷新;
         refresh_token拥有较长的有效期（7天、30天、60天、90天），当refresh_token失效的后，需要用户重新授权
         '''
-        arg = dict(appid=self.appid, refresh_token=token, grant_type='refresh_token')
-        url = conf.OAUTH_REFRESH_URL.format(**arg)
+        #appid, refresh_token, grant_type
+        arg = self.appid, token, 'refresh_token'
+        url = conf.OAUTH_REFRESH_URL % arg
         return self._httpReq(url)
     
     def getOauthUserinfo(self, token, openid):
         '''
         如果网页授权作用域为snsapi_userinfo，则可通过oauth_access_token和openid拉取用户信息
         '''
-        url = conf.OAUTH_USERINFO_URL.format(access_token=token, openid=openid, lang='zh_CN')
+        #access_token, openid, lang
+        arg = token, openid, 'zh_CN'
+        url = conf.OAUTH_USERINFO_URL % arg
         return self._httpReq(url)
     
 
@@ -375,4 +380,4 @@ class Button(dict):
         self['sub_button'].append(button)
 
 
-wc = Wechat('wx5818f8be30f01b6f','3cc07f434ec80b41be9559d4bcff9d31')
+wc = Wechat('wx5818f8be30f01b6f','3cc07f434ec80b41be9559d4bcff9d31') #test account

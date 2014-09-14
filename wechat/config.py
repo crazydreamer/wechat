@@ -23,11 +23,11 @@ GROUP_MEMBER_UPDATE_URL = API_URL_PREFIX + '/groups/members/update?access_token=
 
 CUSTOM_SEND_URL = API_URL_PREFIX + '/message/custom/send?access_token=%s'   
 
-OAUTH_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={appid}&redirect_uri={uri}&response_type={code}&scope={scope}&state={state}#wechat_redirect'   
+OAUTH_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=%s&scope=%s&state=%s#wechat_redirect'
 OAUTH_TOKEN_PREFIX = 'https://api.weixin.qq.com/sns/oauth2'   
-OAUTH_TOKEN_URL = OAUTH_TOKEN_PREFIX + '/access_token?appid={appid}&secret={secret}&code={code}&grant_type={grant_type}'
-OAUTH_REFRESH_URL = OAUTH_TOKEN_PREFIX + '/refresh_token?appid={appid}&grant_type={grant_type}&refresh_token={refresh_token}'
-OAUTH_USERINFO_URL = 'https://api.weixin.qq.com/sns/userinfo?access_token={access_token}&openid={openid}&lang={lang}'
+OAUTH_TOKEN_URL = OAUTH_TOKEN_PREFIX + '/access_token?appid=%s&secret=%s&code=%s&grant_type=%s'
+OAUTH_REFRESH_URL = OAUTH_TOKEN_PREFIX + '/refresh_token?appid=%s&grant_type=%s&refresh_token=%s'
+OAUTH_USERINFO_URL = 'https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s&lang=%s'
 
 QRCODE_CREATE_URL = API_URL_PREFIX + '/qrcode/create?access_token=%s'
 QRCODE_IMG_URL = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=%s'  
