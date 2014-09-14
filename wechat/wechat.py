@@ -49,8 +49,9 @@ class WechatError(Exception):
     '''
     抛出异常并记录日志
     '''
-    def __init__(self, info):
+    def __init__(self, info, wc_ins):
         self.info = info
+        self.wechat = wc_ins
         self.log = get_logger(WechatError.__name__, 'error')
         self.log.error(info)
     
@@ -72,7 +73,7 @@ class Wechat(object):
             self.log = get_logger(Wechat.__name__, 'debug')
         else:
             self.log = get_logger(Wechat.__name__, 'info')
-        self._errcode = None
+        self.errcode = None
         self.appid = appid
         self.appsecret = appsecret
         # self.refreshACtoken()
@@ -85,8 +86,8 @@ class Wechat(object):
         '''
         assert(result)
         if result.has_key('errcode') and result['errcode'] != 0:
-            self._errcode = result['errcode']
-            raise WechatError(result['errmsg'].encode('utf8') + '(%d)' % self._errcode)
+            self.errcode = result['errcode']
+            raise WechatError(result['errmsg'].encode('utf8') + '(%d)' % self.errcode, self)
         return result
 
     def _httpReq(self, url, data=None):
