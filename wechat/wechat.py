@@ -257,7 +257,14 @@ class Wechat(object):
         
     def getOauthAccessToken(self, oauth_code):
         '''
-        用户同意授权后,重定向会带着code参数,可通过code获取oauth_access_token与openid
+        :param oauth_code: 用户点击getOauthRedirect生成的url回调时带的code参数
+        :return:{
+            access_token,
+            openid,
+            expires_in,
+            refresh_token,
+            scope
+        }
         '''
         #appid, secret, code, grant_type
         arg = self.appid, self.appsecret, oauth_code, 'authorization_code'
@@ -267,7 +274,7 @@ class Wechat(object):
     def getOauthRefreshToken(self, token):
         '''
         当oauth_access_token超时后，可以使用refresh_token进行刷新;
-        refresh_token拥有较长的有效期（7天、30天、60天、90天），当refresh_token失效的后，需要用户重新授权
+        :return same to Wechat.getOauthAccessToken
         '''
         #appid, grant_type, refresh_token
         arg = self.appid, 'refresh_token', token
@@ -277,6 +284,16 @@ class Wechat(object):
     def getOauthUserinfo(self, token, openid, lang='zh_CN'):
         '''
         如果网页授权作用域为snsapi_userinfo，则可通过oauth_access_token和openid拉取用户信息
+        :return:{
+            openid,
+            nickname,
+            sex,
+            province,
+            city,
+            country,
+            headimgurl,
+            privilege
+        }
         '''
         #access_token, openid, lang
         arg = token, openid, lang
