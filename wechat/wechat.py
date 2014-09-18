@@ -269,17 +269,17 @@ class Wechat(object):
         当oauth_access_token超时后，可以使用refresh_token进行刷新;
         refresh_token拥有较长的有效期（7天、30天、60天、90天），当refresh_token失效的后，需要用户重新授权
         '''
-        #appid, refresh_token, grant_type
-        arg = self.appid, token, 'refresh_token'
+        #appid, grant_type, refresh_token
+        arg = self.appid, 'refresh_token', token
         url = conf.OAUTH_REFRESH_URL % arg
         return self._httpReq(url)
     
-    def getOauthUserinfo(self, token, openid):
+    def getOauthUserinfo(self, token, openid, lang='zh_CN'):
         '''
         如果网页授权作用域为snsapi_userinfo，则可通过oauth_access_token和openid拉取用户信息
         '''
         #access_token, openid, lang
-        arg = token, openid, 'zh_CN'
+        arg = token, openid, lang
         url = conf.OAUTH_USERINFO_URL % arg
         return self._httpReq(url)
     
