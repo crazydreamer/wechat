@@ -10,6 +10,7 @@ import common
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
 from hashlib import md5
+from urllib import quote
 
 cache = common.get_cache()  
 get_logger = common.get_logger
@@ -240,7 +241,7 @@ class Wechat(object):
 
     #####网页授权#####
     
-    def getOauthRedirect(self, redirect_uri, userinfo=False, state=None):
+    def getOauthRedirect(self, redirect_uri, userinfo=False, state=''):
         '''
         获取引导关注者授权的页面(即使在未关注的情况下，只要用户授权，也能获取其信息)
         userinfo -- 要获取详细用户信息则为True
@@ -251,7 +252,7 @@ class Wechat(object):
         else:
             scope = 'snsapi_base'  # 不弹出授权页面，直接跳转，只能获取用户openid
         #appid, uri, code, scope, state
-        arg = self.appid, redirect_uri, state, scope, 'code'
+        arg = self.appid, quote(redirect_uri,''), 'code', scope, state
         return conf.OAUTH_AUTHORIZE_URL % arg
         
     def getOauthAccessToken(self, oauth_code):
