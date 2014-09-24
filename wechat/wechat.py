@@ -70,7 +70,7 @@ class Wechat(object):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
-        if __debug__:
+        if __name__ == '__main__':
             self.log = get_logger(Wechat.__name__, 'debug')
         else:
             self.log = get_logger(Wechat.__name__, 'info')
@@ -99,7 +99,7 @@ class Wechat(object):
         if data is not None and not isinstance(data, basestring) :
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.info('WeChat response: ' + resp + os.linesep + 'FROM: ' + url)
+        self.log.debug('WeChat response: ' + resp + os.linesep + 'FROM: ' + url)
         result = json.loads(resp)
         return self._checkError(result)
         
