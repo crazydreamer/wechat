@@ -204,11 +204,10 @@ class Wechat(object):
             data     列表数据，OPENID的列表
             next_openid     拉取列表的后一个用户的OPENID
         '''
-        if openid is None:
-            url = conf.USER_GET_URL_FIRST
+        if openid:
+            url = conf.USER_GET_URL + ('&next_openid=%s' % openid)
         else:
-            url = conf.USER_GET_URL %  openid
-        
+            url = conf.USER_GET_URL
         return self._httpReq(url)
     
     #####分组管理#####

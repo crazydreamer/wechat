@@ -11,8 +11,7 @@ MENU_GET_URL = API_URL_PREFIX + '/menu/get?access_token=<ac_token>'
 MENU_DELETE_URL = API_URL_PREFIX + '/menu/delete?access_token=<ac_token>'
 MEDIA_GET_URL = API_URL_PREFIX + '/media/get?access_token=<ac_token>'
 
-USER_GET_URL_FIRST = API_URL_PREFIX + '/user/get?access_token=<ac_token>'
-USER_GET_URL = USER_GET_URL_FIRST + '&next_openid=%s'
+USER_GET_URL = API_URL_PREFIX + '/user/get?access_token=<ac_token>'
 USER_INFO_URL = API_URL_PREFIX + '/user/info?access_token=<ac_token>&openid=%s'
   
 GROUP_GET_URL = API_URL_PREFIX + '/groups/get?access_token=<ac_token>'
