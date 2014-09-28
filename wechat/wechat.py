@@ -62,6 +62,7 @@ class Wechat(object):
     '''
     
     __ac_token = None
+    ac_token_tag = r'<ac_token>'
     
     def __init__(self, appid, appsecret):
         '''
@@ -95,6 +96,9 @@ class Wechat(object):
         '''
         if data is not None and not isinstance(data, basestring) :
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
+        if Wechat.ac_token_tag in url:
+            self.refreshACtoken()
+            url = url.replace(Wechat.ac_token_tag,Wechat.__ac_token)
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
         self.log.debug('WeChat response: ' + resp + linesep + 'FROM: ' + url)
         result = json.loads(resp)
@@ -141,7 +145,7 @@ class Wechat(object):
             
         data = json.dumps(msg_to_send, ensure_ascii=False)
 #         return data
-        url = conf.CUSTOM_SEND_URL % Wechat.__ac_token
+        url = conf.CUSTOM_SEND_URL
         self._httpReq(url, data)
         return self
         
@@ -152,21 +156,21 @@ class Wechat(object):
         button -- a list of Button object
         '''
         menu={'button':button}
-        url = conf.MENU_CREATE_URL % Wechat.__ac_token
+        url = conf.MENU_CREATE_URL
         return self._httpReq(url, menu)
         
     def getMenu(self):
         '''
         获取已设置的menu,返回一个dict
         '''
-        url = conf.MENU_GET_URL % Wechat.__ac_token
+        url = conf.MENU_GET_URL
         return self._httpReq(url)['menu']['button']
     
     def deleteMenu(self):
         '''
         删除已设置的menu
         '''
-        url = conf.MENU_DELETE_URL % Wechat.__ac_token
+        url = conf.MENU_DELETE_URL
         return self._httpReq(url)
             
     ######用户管理######
@@ -187,7 +191,7 @@ class Wechat(object):
                             0代表640*640正方形头像），用户没有头像时该项为空
             subscribe_time     用户关注时间，为时间戳。如果用户曾多次关注，则取最后关注时间
         '''
-        url = conf.USER_INFO_URL % (Wechat.__ac_token, openid)
+        url = conf.USER_INFO_URL %  openid
         return self._httpReq(url)
     
     def getUserFollowed(self, openid=None):
@@ -201,9 +205,9 @@ class Wechat(object):
             next_openid     拉取列表的后一个用户的OPENID
         '''
         if openid is None:
-            url = conf.USER_GET_URL_FIRST % Wechat.__ac_token
+            url = conf.USER_GET_URL_FIRST
         else:
-            url = conf.USER_GET_URL % (Wechat.__ac_token, openid)
+            url = conf.USER_GET_URL %  openid
         
         return self._httpReq(url)
     
@@ -213,26 +217,26 @@ class Wechat(object):
         '''
         一个公众账号，最多支持创建500个分组
         '''
-        url = conf.GROUP_CREATE_URL % Wechat.__ac_token
+        url = conf.GROUP_CREATE_URL
         data = {'group':{'name':name}}
         return self._httpReq(url, data)
         
     def getGroup(self):
-        url = conf.GROUP_GET_URL % Wechat.__ac_token
+        url = conf.GROUP_GET_URL
         return self._httpReq(url)
     
     def getGroupUser(self, openid):
-        url = conf.GROUP_USER_GET_URL % Wechat.__ac_token
+        url = conf.GROUP_USER_GET_URL
         data = {'openid':openid}
         return self._httpReq(url, data)
     
     def updateGroupName(self, id_, newname):
-        url = conf.GROUP_UPDATE_URL % Wechat.__ac_token
+        url = conf.GROUP_UPDATE_URL
         data = {"group":{"id":id_, "name":newname}}
         return self._httpReq(url, data)
     
     def moveGroupUser(self, openid, to_groupid):
-        url = conf.GROUP_MEMBER_UPDATE_URL % Wechat.__ac_token
+        url = conf.GROUP_MEMBER_UPDATE_URL
         data = {"openid":openid, "to_groupid":to_groupid}
         return self._httpReq(url, data)
 
@@ -313,7 +317,7 @@ class Wechat(object):
             return
                 {"ticket":"_____","expire_seconds":_____}
             '''
-            url = conf.QRCODE_CREATE_URL % Wechat.__ac_token
+            url = conf.QRCODE_CREATE_URL
             data = {"action_info": {"scene": {"scene_id": id_}}}
             if forever:
                 data['action_name'] = 'QR_LIMIT_SCENE'
@@ -332,7 +336,7 @@ class Wechat(object):
             media_id     媒体文件上传后，获取时的唯一标识
             created_at     媒体文件上传时间戳
         '''
-        url = conf.FILE_UPLOAD_URL % (Wechat.__ac_token, type_)
+        url = conf.FILE_UPLOAD_URL %  type_
         return self._httpReq(url, data)
         
     def downloadMedia(self, media_id):
@@ -340,7 +344,7 @@ class Wechat(object):
         通过media_id获取已上传的多媒体文件(不支持下载视频)
         正常情况直接返回HTTP头与实体
         '''
-        url = conf.FILE_DOWNLOAD_URL % (Wechat.__ac_token, media_id)
+        url = conf.FILE_DOWNLOAD_URL %  media_id
         r = urlopen(url)
         if r.headers['Content-Type'] == 'image/jpeg':
             return r.read()
