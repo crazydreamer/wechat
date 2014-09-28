@@ -7,7 +7,7 @@ def xml_load(xmlstr):
     __ = {}
     root = ET.fromstring(xmlstr)
     for child in root:
-        __[child.tag] = child.text
+        __[child.tag] = xml_unescape(child.text)
     return __
 
 
@@ -29,10 +29,10 @@ def xml_dump(obj_dict=None, root=None):
                 xml_dump(obj_dict[k][0], tmp)
     if root.tag == 'xml':
         xmlstr = ET.tostring(root, encoding='utf-8')
-        return xml_quote(xmlstr)
+        return xmlstr
 
 
-def xml_quote(xmlstr):
+def xml_unescape(xmlstr):
     __ = {
         '&amp;': '&',
         '&lt;': '<',
