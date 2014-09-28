@@ -1,6 +1,6 @@
 # coding=utf-8
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO, EVENT
-from wechat import get_logger
+from common import get_logger, xml_load, xml_dump
 from wechat import WechatError
 import xml.etree.ElementTree as ET
 from time import time
@@ -35,10 +35,7 @@ class Message(object):
         '''
         if log:
             self.log.info('receive:\n' + raw_msg)
-        root = ET.fromstring(raw_msg)
-        # 微信发来的XML只有一层
-        for child in root:
-            self._receive[child.tag] = child.text
+        self._receive = xml_load(raw_msg)
         return self
 
     def setReply(self, **arg):
@@ -95,36 +92,9 @@ class Message(object):
         else:
             self._reply['ToUserName'],self._reply['FromUserName'] = self.getRev('FromUserName','ToUserName')
             self._reply['CreateTime'] = '%d' % time()
-            tmp = self.reply2XML()
+            tmp = xml_dump(self._reply)
         self._reply.clear()
         return tmp
-
-
-    def reply2XML(self, root=None, body=None):
-        '''
-        dict => xml,键对应树名,值为str则为树值,list则为子树
-        怪微信咯,这坑爹的6种XML格式不统一
-        '''
-        if (body and root) is None:
-            body = self._reply
-            root = ET.Element('xml')
-        for k in body:
-            tmp = ET.SubElement(root, k)
-            if isinstance(body[k], basestring):
-                # 要用unicode赋值
-                tmp.text = body[k]
-            else:
-                # now body[k] is a list who is carrying dict
-                if tmp.tag == 'Articles':
-                    item_tag = 'item'
-                    for i in body[k]:
-                        item = ET.SubElement(tmp, item_tag)
-                        self.reply2XML(root=item, body=i)
-                else:
-                    # image,music,voice,video消息的list只有一项
-                    self.reply2XML(tmp, body[k][0])
-        if root.tag == 'xml':
-            return ET.tostring(root, encoding='utf-8')
 
 
     ###########类属性#########
