@@ -1,15 +1,12 @@
 # coding=utf-8
-import os
-reload(os.sys)
-os.sys.setdefaultencoding('utf8')
 from urllib2 import urlopen
+from os import linesep
 import json
-from hashlib import sha1
+from hashlib import sha1, md5
 import config as conf
 import common
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
-from hashlib import md5
 from urllib import quote
 
 cache = common.get_cache()  
@@ -99,7 +96,7 @@ class Wechat(object):
         if data is not None and not isinstance(data, basestring) :
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.debug('WeChat response: ' + resp + os.linesep + 'FROM: ' + url)
+        self.log.debug('WeChat response: ' + resp + linesep + 'FROM: ' + url)
         result = json.loads(resp)
         return self._checkError(result)
         
