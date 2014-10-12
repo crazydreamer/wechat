@@ -68,7 +68,6 @@ class Message(object):
             ...        ...
             MsgId     消息id，64位整型
         '''
-        assert(self._receive)
         arglen = len(arg)
 
         if arglen == 0:
@@ -86,9 +85,8 @@ class Message(object):
         获取要回复的消息,设置回复时间
         :return: 返回XML格式的微信消息
         '''
-        assert(self._reply)
         if raw:
-            tmp = self._reply
+            tmp = self._reply.copy()
         else:
             self._reply['ToUserName'],self._reply['FromUserName'] = self.getRev('FromUserName','ToUserName')
             self._reply['CreateTime'] = '%d' % time()
