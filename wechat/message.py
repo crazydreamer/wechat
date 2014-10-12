@@ -142,10 +142,10 @@ class Message(object):
     def musicReply(self, title, description, musicurl, hqmusicurl, thumbmediaid):
         self.updateReplyItems(
             Title=title,
-            Description=description,  # can be None
+            Description=description,
             MusicUrl=musicurl,
-            HQMusicUrl=hqmusicurl,  # can be None
-            ThumbMediaId=thumbmediaid  # can be None
+            HQMusicUrl=hqmusicurl,
+            ThumbMediaId=thumbmediaid
             )
         self.setReply(MsgType=MUSIC, Music=self._items)
         return self
