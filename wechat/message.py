@@ -18,7 +18,7 @@ class Message(object):
         '''
         self._receive = {}
         self._reply = {}
-        self.items = []  # 通常为用户可见的消息实体
+        self._items = []  # 通常为用户可见的消息实体
         if __debug__:
             self.log = get_logger(Message.__name__, 'debug')
         else:
@@ -54,7 +54,7 @@ class Message(object):
         for k, v in item.items():
             if v is None:
                 del item[k]
-        self.items.append(item)
+        self._items.append(item)
         return self
 
     def getRev(self, *arg):
@@ -92,6 +92,7 @@ class Message(object):
             self._reply['CreateTime'] = '%d' % time()
             tmp = xml_dump(self._reply)
         self._reply.clear()
+        self._items = []
         return tmp
 
 
@@ -124,18 +125,18 @@ class Message(object):
         return self
 
     def imageReply(self, media_id):
-        self.items.append({'MediaId':media_id})
-        self.setReply(MsgType=IMAGE, Image=self.items)
+        self._items.append({'MediaId':media_id})
+        self.setReply(MsgType=IMAGE, Image=self._items)
         return self
 
     def voiceReply(self, media_id):
-        self.items.append({'MediaId':media_id})
-        self.setReply(MsgType=VOICE, Voice=self.items)
+        self._items.append({'MediaId':media_id})
+        self.setReply(MsgType=VOICE, Voice=self._items)
         return self
 
     def videoReply(self, media_id, title, description):
-        self.items.append({'MediaId':media_id, 'Title':title, 'Description':description})
-        self.setReply(MsgType=VIDEO, Video=self.items)
+        self._items.append({'MediaId':media_id, 'Title':title, 'Description':description})
+        self.setReply(MsgType=VIDEO, Video=self._items)
         return self
 
     def musicReply(self, title, description, musicurl, hqmusicurl, thumbmediaid):
@@ -146,7 +147,7 @@ class Message(object):
             HQMusicUrl=hqmusicurl,  # can be None
             ThumbMediaId=thumbmediaid  # can be None
             )
-        self.setReply(MsgType=MUSIC, Music=self.items)
+        self.setReply(MsgType=MUSIC, Music=self._items)
         return self
 
     def newsReply(self, title, description, picurl, url):
@@ -156,8 +157,8 @@ class Message(object):
         '''
         self.updateReplyItems(Title=title, Description=description, PicUrl=picurl, Url=url)
 
-        if len(self.items) > 10:
+        if len(self._items) > 10:
             raise WechatError('news message limit 10 items')
-        self.setReply(MsgType=NEWS, Articles=self.items, ArticleCount=str(len(self.items)))
+        self.setReply(MsgType=NEWS, Articles=self._items, ArticleCount=str(len(self._items)))
         return self
         
