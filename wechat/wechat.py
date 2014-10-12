@@ -128,6 +128,11 @@ class Wechat(object):
         msg_instance
             一个设置好回复内容的Message实例
         '''
+        def lower_key(obj_list):
+            assert isinstance(obj_list,list)
+            for i in range(len(obj_list)):
+                obj_list[i] = {k.lower():v for k, v in obj_list[i].items()}
+            return obj_list
         Msg = msg_instance.getReply(raw=True)
         msgtype = Msg['MsgType']
         msg_to_send = {
@@ -139,12 +144,11 @@ class Wechat(object):
             msg_to_send[msgtype.lower()] = {'content':Msg['Content']}
         elif msgtype == NEWS:
             items = Msg['Articles']  # a list
-            msg_to_send[msgtype.lower()] = {'articles':items}
+            msg_to_send[msgtype.lower()] = {'articles':lower_key(items)}
         else:
-            msg_to_send[msgtype.lower()] = Msg[msgtype][0]  # image,music,voice,video类型的消息
-            
+            msg_to_send[msgtype.lower()] = lower_key(Msg[msgtype.title()])[0]  # image,music,voice,video类型的消息
+
         data = json.dumps(msg_to_send, ensure_ascii=False)
-#         return data
         url = conf.CUSTOM_SEND_URL
         self._httpReq(url, data)
         return self
