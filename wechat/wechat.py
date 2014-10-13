@@ -68,10 +68,7 @@ class Wechat(object):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
-        if __name__ == '__main__':
-            self.log = get_logger(Wechat.__name__, 'debug')
-        else:
-            self.log = get_logger(Wechat.__name__, 'info')
+        self.log = get_logger(Wechat.__name__, 'debug')
         self.errcode = None
         self.appid = appid
         self.appsecret = appsecret
