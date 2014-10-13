@@ -94,7 +94,7 @@ class Wechat(object):
         发送http请求,根据data是否为空发送GET or POST,返回一个由微信产生的json转换的dict
         data -- 若非字符串则转化为json字符串
         '''
-        if data is not None and not isinstance(data, basestring) :
+        if data is not None:
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
         if Wechat.ac_token_tag in url:
             self.refreshACtoken()
@@ -148,9 +148,8 @@ class Wechat(object):
         else:
             msg_to_send[msgtype.lower()] = lower_key(Msg[msgtype.title()])[0]  # image,music,voice,video类型的消息
 
-        data = json.dumps(msg_to_send, ensure_ascii=False)
         url = conf.CUSTOM_SEND_URL
-        self._httpReq(url, data)
+        self._httpReq(url, msg_to_send)
         return self
         
     
