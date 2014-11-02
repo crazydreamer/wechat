@@ -86,6 +86,15 @@ class Wechat(object):
             raise WechatError(result['errmsg'].encode('utf8') + '(%d)' % self.errcode, self)
         return result
 
+    def _http(self, url, data):
+        if Wechat.ac_token_tag in url:
+            self.refreshACtoken()
+            url = url.replace(Wechat.ac_token_tag, Wechat.__ac_token)
+        resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
+        self.log.debug('WeChat response: ' + resp + linesep + 'FROM: ' + url)
+        return json.loads(resp)
+
+
     def _httpReq(self, url, data=None):
         '''
         发送http请求,根据data是否为空发送GET or POST,返回一个由微信产生的json转换的dict
@@ -93,13 +102,17 @@ class Wechat(object):
         '''
         if data is not None:
             data = json.dumps(data, ensure_ascii=False).encode('utf8')
-        if Wechat.ac_token_tag in url:
-            self.refreshACtoken()
-            url = url.replace(Wechat.ac_token_tag,Wechat.__ac_token)
-        resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.debug('WeChat response: ' + resp + linesep + 'FROM: ' + url)
-        result = json.loads(resp)
-        return self._checkError(result)
+        result = self._http(url, data)
+        try:
+            result = self._checkError(result)
+        except WechatError, e:
+            if e.wechat.errcode == 40001:
+                self.refreshACtoken(True)
+                result = self._checkError(self._http(url, data))
+            else:
+                raise e
+        finally:
+            return result
         
     def refreshACtoken(self, force=False):
         '''
