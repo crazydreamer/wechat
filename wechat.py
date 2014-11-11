@@ -9,8 +9,9 @@ from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
 from urllib import quote
 
-cache = common.get_cache()  
+cache = common.get_cache()
 get_logger = common.get_logger
+
 
 def valid(token, signature, timestamp, nonce):
     '''
@@ -25,45 +26,48 @@ def valid(token, signature, timestamp, nonce):
     else:
         return False
 
-def url_bind(openid,secret_key='whosyourdaddy'):
+
+def url_bind(openid, secret_key='whosyourdaddy'):
     '''
     微信端打开页面时用于传递openid
     :param openid:
     :return: url参数dict
     '''
-    timestamp=str(int(time()))
-    hash=md5(openid+timestamp+secret_key).hexdigest()
-    return dict(openid=openid,t=timestamp,h=hash)
+    timestamp = str(int(time()))
+    hash = md5(openid + timestamp + secret_key).hexdigest()
+    return dict(openid=openid, t=timestamp, h=hash)
 
-def url_valid(openid,t,h,secret_key='whosyourdaddy',expire=3600):
-    hash=md5(openid+t+secret_key).hexdigest()
-    now=int(time())
+
+def url_valid(openid, t, h, secret_key='whosyourdaddy', expire=3600):
+    hash = md5(openid + t + secret_key).hexdigest()
+    now = int(time())
     if h == hash and now - int(t) < expire:
         return True
-
 
 
 class WechatError(Exception):
     '''
     抛出异常并记录日志
     '''
+
     def __init__(self, info, wc_ins):
         self.info = info
         self.wechat = wc_ins
         self.log = get_logger(WechatError.__name__, 'error')
         self.log.error(info)
-    
+
     def __str__(self):
         return repr(self.info)
+
 
 class Wechat(object):
     '''
     中间操作方法(如获取access token)返回self以链式调用
     '''
-    
+
     __ac_token = None
     ac_token_tag = r'<ac_token>'
-    
+
     def __init__(self, appid, appsecret):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
@@ -73,14 +77,14 @@ class Wechat(object):
         self.appid = appid
         self.appsecret = appsecret
         # self.refreshACtoken()
-        
-    ######通用方法######
-        
+
+    # #####通用方法######
+
     def _checkError(self, result):
         '''
         检查微信响应的信息有无错误(微信总是响应"{"开头的json),无错则返回结果
         '''
-        assert(result)
+        assert (result)
         if result.has_key('errcode') and result['errcode'] != 0:
             self.errcode = result['errcode']
             raise WechatError(result['errmsg'].encode('utf8') + '(%d)' % self.errcode, self)
@@ -114,7 +118,7 @@ class Wechat(object):
                 raise e
         else:
             return result
-        
+
     def refreshACtoken(self, force=False):
         '''
         cache和静态变量保存actoken,若超过存活期则从微信API重新获取
@@ -131,7 +135,7 @@ class Wechat(object):
         else:
             Wechat.__ac_token = cache.get('wc_ac_token')
         return self
-    
+
     #######发送消息#######
     def sendMsg(self, openid, msg_instance):
         '''
@@ -139,54 +143,56 @@ class Wechat(object):
         msg_instance
             一个设置好回复内容的Message实例
         '''
+
         def lower_key(obj_list):
-            assert isinstance(obj_list,list)
+            assert isinstance(obj_list, list)
             for i in range(len(obj_list)):
-                obj_list[i] = {k.lower():v for k, v in obj_list[i].items()}
+                obj_list[i] = {k.lower(): v for k, v in obj_list[i].items()}
             return obj_list
+
         Msg = msg_instance.getReply(raw=True)
         msgtype = Msg['MsgType']
         msg_to_send = {
-                       "touser":openid,
-                       "msgtype":msgtype.lower(),
-                       }
+            "touser": openid,
+            "msgtype": msgtype.lower(),
+        }
         # 怪微信咯
         if msgtype == TEXT:
-            msg_to_send[msgtype.lower()] = {'content':Msg['Content']}
+            msg_to_send[msgtype.lower()] = {'content': Msg['Content']}
         elif msgtype == NEWS:
             items = Msg['Articles']  # a list
-            msg_to_send[msgtype.lower()] = {'articles':lower_key(items)}
+            msg_to_send[msgtype.lower()] = {'articles': lower_key(items)}
         else:
             msg_to_send[msgtype.lower()] = lower_key(Msg[msgtype.title()])[0]  # image,music,voice,video类型的消息
 
         url = conf.CUSTOM_SEND_URL
         self._httpReq(url, msg_to_send)
         return self
-        
-    
+
+
     #######自定义菜单######
     def createMenu(self, *button):
         '''
         button -- a list of Button object
         '''
-        menu={'button':button}
+        menu = {'button': button}
         url = conf.MENU_CREATE_URL
         return self._httpReq(url, menu)
-        
+
     def getMenu(self):
         '''
         获取已设置的menu,返回一个dict
         '''
         url = conf.MENU_GET_URL
         return self._httpReq(url)['menu']['button']
-    
+
     def deleteMenu(self):
         '''
         删除已设置的menu
         '''
         url = conf.MENU_DELETE_URL
         return self._httpReq(url)
-            
+
     ######用户管理######
     def getUserInfo(self, openid):
         '''
@@ -205,9 +211,9 @@ class Wechat(object):
                             0代表640*640正方形头像），用户没有头像时该项为空
             subscribe_time     用户关注时间，为时间戳。如果用户曾多次关注，则取最后关注时间
         '''
-        url = conf.USER_INFO_URL %  openid
+        url = conf.USER_INFO_URL % openid
         return self._httpReq(url)
-    
+
     def getUserFollowed(self, openid=None):
         '''
         获取关注者列表,返回一个dict
@@ -223,38 +229,38 @@ class Wechat(object):
         else:
             url = conf.USER_GET_URL
         return self._httpReq(url)
-    
+
     #####分组管理#####
-    
+
     def createGroup(self, name):
         '''
         一个公众账号，最多支持创建500个分组
         '''
         url = conf.GROUP_CREATE_URL
-        data = {'group':{'name':name}}
+        data = {'group': {'name': name}}
         return self._httpReq(url, data)
-        
+
     def getGroup(self):
         url = conf.GROUP_GET_URL
         return self._httpReq(url)
-    
+
     def getGroupUser(self, openid):
         url = conf.GROUP_USER_GET_URL
-        data = {'openid':openid}
+        data = {'openid': openid}
         return self._httpReq(url, data)
-    
+
     def updateGroupName(self, id_, newname):
         url = conf.GROUP_UPDATE_URL
-        data = {"group":{"id":id_, "name":newname}}
+        data = {"group": {"id": id_, "name": newname}}
         return self._httpReq(url, data)
-    
+
     def moveGroupUser(self, openid, to_groupid):
         url = conf.GROUP_MEMBER_UPDATE_URL
-        data = {"openid":openid, "to_groupid":to_groupid}
+        data = {"openid": openid, "to_groupid": to_groupid}
         return self._httpReq(url, data)
 
     #####网页授权#####
-    
+
     def getOauthRedirect(self, redirect_uri, userinfo=False, state=''):
         '''
         获取引导关注者授权的页面(即使在未关注的情况下，只要用户授权，也能获取其信息)
@@ -266,9 +272,9 @@ class Wechat(object):
         else:
             scope = 'snsapi_base'  # 不弹出授权页面，直接跳转，只能获取用户openid
         #appid, uri, code, scope, state
-        arg = self.appid, quote(redirect_uri,''), 'code', scope, state
+        arg = self.appid, quote(redirect_uri, ''), 'code', scope, state
         return conf.OAUTH_AUTHORIZE_URL % arg
-        
+
     def getOauthAccessToken(self, oauth_code):
         '''
         :param oauth_code: 用户点击getOauthRedirect生成的url回调时带的code参数
@@ -284,7 +290,7 @@ class Wechat(object):
         arg = self.appid, self.appsecret, oauth_code, 'authorization_code'
         url = conf.OAUTH_TOKEN_URL % arg
         return self._httpReq(url)
-        
+
     def getOauthRefreshToken(self, token):
         '''
         当oauth_access_token超时后，可以使用refresh_token进行刷新;
@@ -294,7 +300,7 @@ class Wechat(object):
         arg = self.appid, 'refresh_token', token
         url = conf.OAUTH_REFRESH_URL % arg
         return self._httpReq(url)
-    
+
     def getOauthUserinfo(self, token, openid, lang='zh_CN'):
         '''
         如果网页授权作用域为snsapi_userinfo，则可通过oauth_access_token和openid拉取用户信息
@@ -313,9 +319,8 @@ class Wechat(object):
         arg = token, openid, lang
         url = conf.OAUTH_USERINFO_URL % arg
         return self._httpReq(url)
-    
 
-    
+
     #####带参数二维码#####
     def getQRImage(self, id_, forever=False, expire=1800):
         '''
@@ -324,6 +329,7 @@ class Wechat(object):
         forever -- 申请永久二维码则为True
         expire -- 该二维码有效时间，以秒为单位。 最大不超过1800。
         '''
+
         def getQRTicket():
             '''
             申请临时二维码或永久二维码的ticket
@@ -338,9 +344,10 @@ class Wechat(object):
                 data['action_name'] = 'QR_SCENE'
                 data['expire_seconds'] = expire
             return self._httpReq(url, data)
+
         url = conf.QRCODE_IMG_URL % getQRTicket()['ticket']
         return url
-        
+
     #######多媒体上传/下载########
     def uploadMedia(self, type_, data):
         '''
@@ -349,15 +356,15 @@ class Wechat(object):
             media_id     媒体文件上传后，获取时的唯一标识
             created_at     媒体文件上传时间戳
         '''
-        url = conf.FILE_UPLOAD_URL %  type_
+        url = conf.FILE_UPLOAD_URL % type_
         return self._httpReq(url, data)
-        
+
     def downloadMedia(self, media_id):
         '''
         通过media_id获取已上传的多媒体文件(不支持下载视频)
         正常情况直接返回HTTP头与实体
         '''
-        url = conf.FILE_DOWNLOAD_URL %  media_id
+        url = conf.FILE_DOWNLOAD_URL % media_id
         r = urlopen(url)
         if r.headers['Content-Type'] == 'image/jpeg':
             return r.read()
@@ -376,7 +383,7 @@ class Button(dict):
         self['name'] = name
         if type_ and value:
             self.setEffect(type_, value)
-        
+
     def setEffect(self, type_, value):
         '''
         value -- it is key or url
@@ -402,7 +409,7 @@ class Button(dict):
         Example:
             addSubButton(Button('xxx','view','http://z.cn'))
         '''
-        if button is self :
+        if button is self:
             raise WechatError('sub_button not allow itself!')
         if self.has_key('type'):
             tmp = self['name']
@@ -413,5 +420,5 @@ class Button(dict):
         self['sub_button'].append(button)
 
 
-wc = Wechat('wx5818f8be30f01b6f','3cc07f434ec80b41be9559d4bcff9d31') #test account
+wc = Wechat('wx5818f8be30f01b6f', '3cc07f434ec80b41be9559d4bcff9d31')  # test account
 wc.getUserInfo('123')

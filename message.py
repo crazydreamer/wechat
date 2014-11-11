@@ -5,11 +5,13 @@ from wechat import WechatError
 import xml.etree.ElementTree as ET
 from time import time
 
+
 class Message(object):
     '''
     接收请求时可用该类初始化,然后调用各类消息类型的reply方法响应.
     参考http://mp.weixin.qq.com/wiki/index.php?title=%E6%8E%A5%E6%94%B6%E6%99%AE%E9%80%9A%E6%B6%88%E6%81%AF
     '''
+
     def __init__(self, raw_msg=None, log=False):
         '''
         根据接收到的消息实体初始化会自动设置被动回复的to/from user.若主动发送客服消息则无需消息实体
@@ -26,7 +28,7 @@ class Message(object):
         if raw_msg is not None:
             self.receiveMsg(raw_msg, log)
 
-    #########接收/回复消息#######
+    # ########接收/回复消息#######
     def receiveMsg(self, raw_msg, log):
         '''
         转化从HTTP接收而来的XML
@@ -72,7 +74,7 @@ class Message(object):
 
         if arglen == 0:
             return self._receive
-        elif arglen == 1 :
+        elif arglen == 1:
             return self._receive.get(arg[0])
         else:
             r = []
@@ -80,7 +82,7 @@ class Message(object):
                 r.append(self._receive.get(i))
             return r
 
-    def getReply(self,raw=False):
+    def getReply(self, raw=False):
         '''
         获取要回复的消息,设置回复时间
         :return: 返回XML格式的微信消息
@@ -88,7 +90,7 @@ class Message(object):
         if raw:
             tmp = self._reply.copy()
         else:
-            self._reply['ToUserName'],self._reply['FromUserName'] = self.getRev('FromUserName','ToUserName')
+            self._reply['ToUserName'], self._reply['FromUserName'] = self.getRev('FromUserName', 'ToUserName')
             self._reply['CreateTime'] = '%d' % time()
             tmp = xml_dump(self._reply)
         self._reply.clear()
@@ -108,12 +110,15 @@ class Message(object):
             return self.getRev('Event')
         else:
             return msgtype
+
     @property
     def fromusername(self):
         return self.getRev('FromUserName')
+
     @property
     def tousername(self):
         return self.getRev('ToUserName')
+
     @property
     def createtime(self):
         return self.getRev('CreateTime')
@@ -125,17 +130,17 @@ class Message(object):
         return self
 
     def imageReply(self, media_id):
-        self._items.append({'MediaId':media_id})
+        self._items.append({'MediaId': media_id})
         self.setReply(MsgType=IMAGE, Image=self._items)
         return self
 
     def voiceReply(self, media_id):
-        self._items.append({'MediaId':media_id})
+        self._items.append({'MediaId': media_id})
         self.setReply(MsgType=VOICE, Voice=self._items)
         return self
 
     def videoReply(self, media_id, title, description):
-        self._items.append({'MediaId':media_id, 'Title':title, 'Description':description})
+        self._items.append({'MediaId': media_id, 'Title': title, 'Description': description})
         self.setReply(MsgType=VIDEO, Video=self._items)
         return self
 
@@ -146,7 +151,7 @@ class Message(object):
             MusicUrl=musicurl,
             HQMusicUrl=hqmusicurl,
             ThumbMediaId=thumbmediaid
-            )
+        )
         self.setReply(MsgType=MUSIC, Music=self._items)
         return self
 
