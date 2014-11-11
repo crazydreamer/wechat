@@ -109,9 +109,10 @@ class Wechat(object):
             if e.wechat.errcode == 40001:
                 self.refreshACtoken(True)
                 result = self._checkError(self._http(url, data))
+                return result
             else:
                 raise e
-        finally:
+        else:
             return result
         
     def refreshACtoken(self, force=False):
@@ -413,3 +414,4 @@ class Button(dict):
 
 
 wc = Wechat('wx5818f8be30f01b6f','3cc07f434ec80b41be9559d4bcff9d31') #test account
+wc.getUserInfo('123')
