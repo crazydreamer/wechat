@@ -421,4 +421,3 @@ class Button(dict):
 
 
 wc = Wechat('wx5818f8be30f01b6f', '3cc07f434ec80b41be9559d4bcff9d31')  # test account
-wc.getUserInfo('123')
