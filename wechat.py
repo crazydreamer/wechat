@@ -50,7 +50,7 @@ class WechatError(Exception):
     抛出异常并记录日志
     '''
 
-    def __init__(self, info, wc_ins):
+    def __init__(self, info, wc_ins=None):
         self.info = info
         self.wechat = wc_ins
         self.log = get_logger(WechatError.__name__, 'error')
