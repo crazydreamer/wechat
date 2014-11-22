@@ -50,9 +50,9 @@ class WechatError(Exception):
     抛出异常并记录日志
     '''
 
-    def __init__(self, info, wc_ins=None):
+    def __init__(self, info, errcode=None):
         self.info = info
-        self.wechat = wc_ins
+        self.errcode = errcode
         self.log = get_logger(WechatError.__name__, 'error')
         self.log.error(info)
 
@@ -73,7 +73,6 @@ class Wechat(object):
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
         self.log = get_logger(Wechat.__name__, 'debug')
-        self.errcode = None
         self.appid = appid
         self.appsecret = appsecret
         # self.refreshACtoken()
@@ -86,8 +85,8 @@ class Wechat(object):
         '''
         assert (result)
         if result.has_key('errcode') and result['errcode'] != 0:
-            self.errcode = result['errcode']
-            raise WechatError(result['errmsg'].encode('utf8') + '(%d)' % self.errcode, self)
+            msg = '{} - {}'.format(result['errmsg'].encode('utf8'), str(result['errcode']))
+            raise WechatError(msg, result['errcode'])
         return result
 
     def _http(self, url, data):
@@ -110,7 +109,7 @@ class Wechat(object):
         try:
             result = self._checkError(result)
         except WechatError, e:
-            if e.wechat.errcode == 40001:
+            if e.errcode == 40001:
                 self.refreshACtoken(True)
                 result = self._checkError(self._http(url, data))
                 return result
@@ -136,7 +135,7 @@ class Wechat(object):
             Wechat.__ac_token = cache.get('wc_ac_token')
         return self
 
-    #######发送消息#######
+    # ######发送消息#######
     def sendMsg(self, openid, msg_instance):
         '''
         主动发送消息,需在用户发送过消息的48小时内
