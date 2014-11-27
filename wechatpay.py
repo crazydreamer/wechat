@@ -61,7 +61,8 @@ class WechatPayBase(Wechat):
         parameters['sign'] = self._sign(parameters)
         return unparse({'xml': parameters}, full_document=False).encode('utf8')
 
-    def _check_error(self, xml_result):
+    def _check_error(self, xml_result, path=None):
+        self.log.debug('response: ' + os.linesep + xml_result + os.linesep + 'FROM: ' + path)
         try:
             result = parse(xml_result)['xml']
         except Exception:
@@ -86,8 +87,7 @@ class WechatPayBase(Wechat):
         parameters = self._createXML(parameters)
         cert = (CERT_PATH, KEY_PATH) if cert else ()
         result = post(url, parameters, cert=cert)
-        self.log.debug('response: ' + os.linesep + result.text + os.linesep + 'FROM: ' + path)
-        return self._check_error(result.text)
+        return self._check_error(result.text, path)
 
 
 class WechatPay(WechatPayBase):
@@ -108,7 +108,7 @@ class WechatPay(WechatPayBase):
         return dumps(parameters)
 
     def check_notify(self, xml_notify, callback):
-        content = self._check_error(xml_notify)
+        content = self._check_error(xml_notify, 'request of Wechat pay notify')
         result, fail_msg = callback(**content)
         if result:
             return unparse({'return_code': 'SUCCESS'})
