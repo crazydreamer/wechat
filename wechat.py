@@ -53,7 +53,7 @@ class WechatError(Exception):
     def __init__(self, info, errcode=None):
         self.info = info
         self.errcode = errcode
-        self.log = get_logger(WechatError.__name__, 'error')
+        self.log = get_logger(self.__class__.__name__, 'error')
         self.log.error(info)
 
     def __str__(self):
@@ -72,7 +72,7 @@ class Wechat(object):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
-        self.log = get_logger(Wechat.__name__, 'debug')
+        self.log = get_logger(self.__class__.__name__, 'debug')
         self.appid = appid
         self.appsecret = appsecret
         # self.refreshACtoken()
@@ -94,7 +94,7 @@ class Wechat(object):
             self.refreshACtoken()
             url = url.replace(Wechat.ac_token_tag, Wechat.__ac_token)
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.debug('WeChat response: ' + resp + linesep + 'FROM: ' + url)
+        self.log.debug('response: ' + linesep + resp + linesep + 'FROM: ' + url)
         return json.loads(resp)
 
 
