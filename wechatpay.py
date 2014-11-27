@@ -77,7 +77,7 @@ class WechatPayBase(Wechat):
                 msg = 'result fail: {} - {}'.format(result['err_code_des'].encode('utf8'), result['err_code'])
                 raise WechatPayError(msg, result['err_code'])
             else:
-                sign = result['sign']
+                sign = result.pop('sign')
                 if sign != self._sign(result): raise WechatPayError('invalid sign', 'INVALID SIGN')
             return result
 
