@@ -77,7 +77,7 @@ class WechatPayBase(Wechat):
                 msg = 'result fail: {} - {}'.format(result['err_code_des'].encode('utf8'), result['err_code'])
                 raise WechatPayError(msg, result['err_code'])
             else:
-                sign = result.pop('sign')
+                sign = result['sign']
                 if sign != self._sign(result): raise WechatPayError('invalid sign', 'INVALID SIGN')
             return result
 
@@ -111,9 +111,9 @@ class WechatPay(WechatPayBase):
         content = self._check_error(xml_notify, 'request of Wechat pay notify')
         result, fail_msg = callback(**content)
         if result:
-            return unparse({'return_code': 'SUCCESS'})
+            return unparse(dict(xml={'return_code': 'SUCCESS'}))
         else:
-            return unparse({'return_code': 'FAIL', 'return_msg': ''})
+            return unparse(dict(xml={'return_code': 'FAIL', 'return_msg': ''}))
 
     @Parameters('out_trade_no')
     def order_query(self, param):
