@@ -113,7 +113,8 @@ class WechatPay(WechatPayBase):
         if result:
             return unparse(dict(xml={'return_code': 'SUCCESS'}))
         else:
-            return unparse(dict(xml={'return_code': 'FAIL', 'return_msg': ''}))
+            self.log.error('Wechat pay notify fail: {}'.format(fail_msg))
+            return unparse(dict(xml={'return_code': 'FAIL', 'return_msg': fail_msg}))
 
     @Parameters('out_trade_no')
     def order_query(self, param):
