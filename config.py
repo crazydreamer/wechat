@@ -21,6 +21,7 @@ GROUP_UPDATE_URL = API_URL_PREFIX + '/groups/update?access_token=<ac_token>'
 GROUP_MEMBER_UPDATE_URL = API_URL_PREFIX + '/groups/members/update?access_token=<ac_token>'
 
 CUSTOM_SEND_URL = API_URL_PREFIX + '/message/custom/send?access_token=<ac_token>'
+TEMP_MSG_SEND_URL = API_URL_PREFIX + '/message/template/send?access_token=<ac_token>'
 
 OAUTH_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=%s&scope=%s&state=%s#wechat_redirect'
 OAUTH_TOKEN_PREFIX = 'https://api.weixin.qq.com/sns/oauth2'

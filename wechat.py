@@ -169,6 +169,24 @@ class Wechat(object):
         return self
 
 
+    def sendTempMsg(self, openid, tempid, url=None, top_color='#ffffff', **kw):
+        data = {}
+        for k, v in kw.items():
+            if hasattr(v, '__iter__'):
+                data[k] = dict(value=v[0], color=v[1])
+            else:
+                data[k] = dict(value=v, color='#000000')
+        msg = dict(
+            touser=openid,
+            template_id=tempid,
+            url=url,
+            topcolor=top_color,
+            data=data
+        )
+        self._httpReq(conf.TEMP_MSG_SEND_URL, msg)
+        return self
+
+
     #######自定义菜单######
     def createMenu(self, *button):
         '''
