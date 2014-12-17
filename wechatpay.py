@@ -61,8 +61,7 @@ class WechatPayBase(Wechat):
         parameters['sign'] = self._sign(parameters)
         return unparse({'xml': parameters}, full_document=False).encode('utf8')
 
-    def _check_error(self, xml_result, path=None):
-        self.log.debug('response: ' + os.linesep + xml_result + os.linesep + 'FROM: ' + path)
+    def _check_error(self, xml_result):
         try:
             result = parse(xml_result)['xml']
         except Exception:
@@ -71,14 +70,15 @@ class WechatPayBase(Wechat):
             with open(file_name, 'w') as f:
                 f.write(xml_result)
         else:
-            if result['return_code'] != 'SUCCESS':
-                raise WechatPayError(result['return_msg'].encode('utf8'))
+            sign = result.pop('sign')
+            if sign != self._sign(result):
+                raise WechatPayError('invalid sign', 'INVALID SIGN')
+            elif result['return_code'] != 'SUCCESS':
+                msg = 'return fail: {} - {}'.format(result['return_msg'].encode('utf8'), result['return_code'])
+                raise WechatPayError(msg, result['return_code'])
             elif result['result_code'] != 'SUCCESS':
                 msg = 'result fail: {} - {}'.format(result['err_code_des'].encode('utf8'), result['err_code'])
                 raise WechatPayError(msg, result['err_code'])
-            else:
-                sign = result.pop('sign')
-                if sign != self._sign(result): raise WechatPayError('invalid sign', 'INVALID SIGN')
             return result
 
 
@@ -87,7 +87,8 @@ class WechatPayBase(Wechat):
         parameters = self._createXML(parameters)
         cert = (CERT_PATH, KEY_PATH) if cert else ()
         result = post(url, parameters, cert=cert)
-        return self._check_error(result.text, path)
+        self.log.debug('response: ' + os.linesep + result + os.linesep + 'FROM: ' + path)
+        return self._check_error(result.text)
 
 
 class WechatPay(WechatPayBase):
