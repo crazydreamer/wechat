@@ -94,7 +94,7 @@ class Wechat(object):
             self.refreshACtoken()
             url = url.replace(Wechat.ac_token_tag, Wechat.__ac_token)
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
-        self.log.debug('response: ' + linesep + resp + linesep + 'FROM: ' + url)
+        self._logResp(resp, url)
         return json.loads(resp)
 
 
@@ -117,6 +117,10 @@ class Wechat(object):
                 raise e
         else:
             return result
+
+    def _logResp(self, content, source):
+        self.log.info('response: ' + linesep + content + linesep + 'FROM: ' + source)
+        return self
 
     def refreshACtoken(self, force=False):
         '''
