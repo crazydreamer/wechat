@@ -44,3 +44,4 @@ NOTIFY_URL = 'http://foo.com/bar'  # replace your own URL
 CERT_PATH = 'cert/apiclient_cert.pem'
 KEY_PATH = 'cert/apiclient_key.pem'
 DOWNLOAD_PATH = './'
+MYIP = ''

@@ -6,9 +6,7 @@ from time import time, strftime
 from xmltodict import parse, unparse
 from simplejson import dumps
 from wechat import Wechat, WechatError
-from config import DOWNLOAD_PATH, NOTIFY_URL, CERT_PATH, KEY_PATH
-
-MYIP = get('http://api.ipify.org').text
+from config import DOWNLOAD_PATH, NOTIFY_URL, CERT_PATH, KEY_PATH, MYIP
 
 
 class Parameters(object):
