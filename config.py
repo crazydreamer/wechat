@@ -37,11 +37,3 @@ FILE_DOWNLOAD_URL = 'http://file.api.weixin.qq.com/cgi-bin/media/get?access_toke
 
 AC_TOKEN_EXPIRES_IN = 7200
 OAUTH_AC_TOKEN_EXPIRES_IN = 7200
-
-############ Pay
-
-NOTIFY_URL = 'http://foo.com/bar'  # replace your own URL
-CERT_PATH = 'cert/apiclient_cert.pem'
-KEY_PATH = 'cert/apiclient_key.pem'
-DOWNLOAD_PATH = './'
-MYIP = ''

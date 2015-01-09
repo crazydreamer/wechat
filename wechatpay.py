@@ -1,12 +1,11 @@
 # coding=utf-8
 import random, string, os
-from requests import post, get
+from requests import post
 from hashlib import md5
 from time import time, strftime
 from xmltodict import parse, unparse
 from simplejson import dumps
 from wechat import Wechat, WechatError
-from config import DOWNLOAD_PATH, NOTIFY_URL, CERT_PATH, KEY_PATH, MYIP
 
 
 class Parameters(object):
@@ -36,6 +35,11 @@ class WechatPayError(WechatError): pass
 
 class WechatPayBase(Wechat):
     api_host = 'https://api.mch.weixin.qq.com'
+    MYIP = ''
+    NOTIFY_URL = ''
+    DOWNLOAD_PATH = './'
+    CERT_PATH = 'cert/apiclient_cert.pem'
+    KEY_PATH = 'cert/apiclient_key.pem'
 
     def __init__(self, appid, appsecret, mch_id, payKey):
         super(WechatPayBase, self).__init__(appid, appsecret)
@@ -64,9 +68,9 @@ class WechatPayBase(Wechat):
             result = parse(xml_result)['xml']
         except Exception:
             t = strftime('%y%m%d%H%M%S')
-            file_name = os.path.join(DOWNLOAD_PATH, '{}.xml'.format(t))
+            file_name = os.path.join(self.DOWNLOAD_PATH, '{}.txt'.format(t))
             with open(file_name, 'w') as f:
-                f.write(xml_result)
+                f.write(xml_result.encode('utf8'))
         else:
             sign = result.pop('sign')
             if sign != self._sign(result):
@@ -83,16 +87,16 @@ class WechatPayBase(Wechat):
     def _post(self, path, parameters, cert=False):
         url = WechatPayBase.api_host + path
         parameters = self._createXML(parameters)
-        cert = (CERT_PATH, KEY_PATH) if cert else ()
+        cert = (self.CERT_PATH, self.KEY_PATH) if cert else ()
         result = post(url, parameters, cert=cert).text
         self._logResp(result, path)
         return self._check_error(result)
 
 
 class WechatPay(WechatPayBase):
-    @Parameters('body', 'out_trade_no', 'total_fee', 'trade_type', 'openid', 'product_id',
-                spbill_create_ip=MYIP, notify_url=NOTIFY_URL)
+    @Parameters('body', 'out_trade_no', 'total_fee', 'trade_type', 'openid', 'product_id')
     def common_pay(self, parameters, *arg, **kwargs):
+        parameters.update(dict(spbill_create_ip=self.MYIP, notify_url=self.NOTIFY_URL))
         return self._post('/pay/unifiedorder', parameters)
 
     def jsapi_parameters(self, prepay_id):
@@ -130,7 +134,7 @@ class WechatPay(WechatPayBase):
             param['op_user_id'] = self.mch_id
         return self._post('/secapi/pay/refund', param, True)
 
-    @Parameters('out_refund_no', 'out_trade_no')
+    @Parameters('out_trade_no')
     def refund_query(self, param):
         return self._post('/pay/refundquery', param)
 
