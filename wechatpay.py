@@ -72,15 +72,17 @@ class WechatPayBase(Wechat):
             with open(file_name, 'w') as f:
                 f.write(xml_result.encode('utf8'))
         else:
-            sign = result.pop('sign')
-            if sign != self._sign(result):
-                raise WechatPayError('invalid sign', 'INVALID SIGN')
-            elif result['return_code'] != 'SUCCESS':
+
+            if result['return_code'] != 'SUCCESS':
                 msg = 'return fail: {} - {}'.format(result['return_msg'].encode('utf8'), result['return_code'])
                 raise WechatPayError(msg, result['return_code'])
             elif result['result_code'] != 'SUCCESS':
                 msg = 'result fail: {} - {}'.format(result['err_code_des'].encode('utf8'), result['err_code'])
                 raise WechatPayError(msg, result['err_code'])
+
+            sign = result.pop('sign')
+            if sign != self._sign(result):
+                raise WechatPayError('invalid sign', 'INVALID SIGN')
             return result
 
 
