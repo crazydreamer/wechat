@@ -7,7 +7,7 @@ def xml_load(xmlstr):
     __ = {}
     root = ET.fromstring(xmlstr)
     for child in root:
-        __[child.tag] = xml_unescape(child.text)
+        __[child.tag] = child.text
     return __
 
 
@@ -30,16 +30,6 @@ def xml_dump(obj_dict=None, root=None):
     if root.tag == 'xml':
         xmlstr = ET.tostring(root, encoding='utf-8')
         return xmlstr
-
-
-def xml_unescape(xmlstr):
-    __ = {
-        '&amp;': '&',
-        '&lt;': '<',
-        '&gt;': '>',
-        '&quot;': '"'
-    }
-    return re.sub(r'(&amp;)|(&lt;)|(&gt;)|(&quot;)', lambda s: __.get(s.group()), xmlstr)
 
 
 def get_logger(name, level='debug'):
