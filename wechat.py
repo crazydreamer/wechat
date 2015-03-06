@@ -293,7 +293,7 @@ class Wechat(object):
         else:
             scope = 'snsapi_base'  # 不弹出授权页面，直接跳转，只能获取用户openid
         #appid, uri, code, scope, state
-        arg = self.appid, quote(redirect_uri, ''), 'code', scope, state
+        arg = self.appid, quote(redirect_uri, ''), 'code', scope, quote(state)
         return conf.OAUTH_AUTHORIZE_URL % arg
 
     def getOauthAccessToken(self, oauth_code):
