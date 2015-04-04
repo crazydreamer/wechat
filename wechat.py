@@ -65,7 +65,6 @@ class Wechat(object):
     中间操作方法(如获取access token)返回self以链式调用
     '''
 
-    __ac_token = None
     ac_token_tag = r'<ac_token>'
 
     def __init__(self, appid, appsecret):
@@ -75,7 +74,7 @@ class Wechat(object):
         self.log = get_logger(self.__class__.__name__, 'debug')
         self.appid = appid
         self.appsecret = appsecret
-        # self.refreshACtoken()
+        self.refreshACtoken()
 
     # #####通用方法######
 
@@ -92,7 +91,7 @@ class Wechat(object):
     def _http(self, url, data):
         if Wechat.ac_token_tag in url:
             self.refreshACtoken()
-            url = url.replace(Wechat.ac_token_tag, Wechat.__ac_token)
+            url = url.replace(Wechat.ac_token_tag, self.ac_token)
         resp = urlopen(str(url), data).read().decode('utf8')  # maybe url is unicode
         self._logResp(resp, url)
         return json.loads(resp)
@@ -126,17 +125,16 @@ class Wechat(object):
         '''
         cache和静态变量保存actoken,若超过存活期则从微信API重新获取
         '''
-        if force or cache.get('wc_ac_token') is None \
-                or (time() - cache.get('wc_ac_timestamp')) > conf.AC_TOKEN_EXPIRES_IN:
+        key = 'ac_token{}'.format(self.appid)
+        self.ac_token = cache.get(key)
+        if force or self.ac_token is None:
             url = conf.ACCESS_URL % (self.appid, self.appsecret)
             result = self._httpReq(url)
-            Wechat.__ac_token = result['access_token']
-            # save to memcache
-            cache.set('wc_ac_token', Wechat.__ac_token)
-            cache.set('wc_ac_timestamp', time())
-            self.log.debug('已刷新actoken: ' + str(Wechat.__ac_token))
-        else:
-            Wechat.__ac_token = cache.get('wc_ac_token')
+            self.ac_token = result['access_token']
+            expires = result['expires_in']
+            c_result = cache.set(key, self.ac_token, expires)
+            if not c_result: raise Exception('memcached set failed')
+            self.log.debug('已刷新actoken: {} & expires_in {}'.format(self.ac_token, expires))
         return self
 
     # ######发送消息#######
@@ -292,7 +290,7 @@ class Wechat(object):
             scope = 'snsapi_userinfo'
         else:
             scope = 'snsapi_base'  # 不弹出授权页面，直接跳转，只能获取用户openid
-        #appid, uri, code, scope, state
+        # appid, uri, code, scope, state
         arg = self.appid, quote(redirect_uri, ''), 'code', scope, quote(state)
         return conf.OAUTH_AUTHORIZE_URL % arg
 
@@ -307,7 +305,7 @@ class Wechat(object):
             scope
         }
         '''
-        #appid, secret, code, grant_type
+        # appid, secret, code, grant_type
         arg = self.appid, self.appsecret, oauth_code, 'authorization_code'
         url = conf.OAUTH_TOKEN_URL % arg
         return self._httpReq(url)
@@ -317,7 +315,7 @@ class Wechat(object):
         当oauth_access_token超时后，可以使用refresh_token进行刷新;
         :return same to Wechat.getOauthAccessToken
         '''
-        #appid, grant_type, refresh_token
+        # appid, grant_type, refresh_token
         arg = self.appid, 'refresh_token', token
         url = conf.OAUTH_REFRESH_URL % arg
         return self._httpReq(url)
@@ -336,7 +334,7 @@ class Wechat(object):
             privilege
         }
         '''
-        #access_token, openid, lang
+        # access_token, openid, lang
         arg = token, openid, lang
         url = conf.OAUTH_USERINFO_URL % arg
         return self._httpReq(url)
@@ -441,4 +439,3 @@ class Button(dict):
         self['sub_button'].append(button)
 
 
-wc = Wechat('wx5818f8be30f01b6f', '3cc07f434ec80b41be9559d4bcff9d31')  # test account

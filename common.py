@@ -1,6 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
-import re
+
+from memcache import Client
 
 
 def xml_load(xmlstr):
@@ -43,19 +44,5 @@ def get_logger(name, level='debug'):
     return logger
 
 
-class Cache(object):
-    '''
-    just a local cache
-    '''
-    __tmp = {}
-
-    def get(self, key):
-        return self.__tmp.get(key)
-
-    def set(self, key, value):
-        self.__tmp[key] = value
-
-
-def get_cache():
-    cache = Cache()
-    return cache
+def get_cache(server='127.0.0.1:11211'):
+    return Client([server])
