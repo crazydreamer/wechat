@@ -133,7 +133,7 @@ class Wechat(object):
             self.ac_token = result['access_token']
             expires = result['expires_in']
             c_result = cache.set(key, self.ac_token, expires)
-            if not c_result: raise Exception('memcached set failed')
+            if not c_result: self.log.error('memcached set failed')
             self.log.debug('已刷新actoken: {} & expires_in {}'.format(self.ac_token, expires))
         return self
 
