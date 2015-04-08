@@ -5,12 +5,11 @@ import json
 from hashlib import sha1, md5
 import config as conf
 import common
+from common import get_cache, get_logger
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
 from urllib import quote
 
-cache = common.get_cache()
-get_logger = common.get_logger
 
 
 def valid(token, signature, timestamp, nonce):
@@ -66,12 +65,13 @@ class Wechat(object):
     '''
 
     ac_token_tag = r'<ac_token>'
+    cache = get_cache()
+    log = get_logger('Wechat', 'debug')
 
     def __init__(self, appid, appsecret):
         '''
         初始化参数集option需包含微信token,appid,appsecret以获取access token
         '''
-        self.log = get_logger(self.__class__.__name__, 'debug')
         self.appid = appid
         self.appsecret = appsecret
         self.refreshACtoken()
@@ -126,13 +126,13 @@ class Wechat(object):
         cache和静态变量保存actoken,若超过存活期则从微信API重新获取
         '''
         key = 'ac_token{}'.format(self.appid)
-        self.ac_token = cache.get(key)
+        self.ac_token = self.cache.get(key)
         if force or self.ac_token is None:
             url = conf.ACCESS_URL % (self.appid, self.appsecret)
             result = self._httpReq(url)
             self.ac_token = result['access_token']
             expires = result['expires_in']
-            c_result = cache.set(key, self.ac_token, expires)
+            c_result = self.cache.set(key, self.ac_token, expires)
             if not c_result: self.log.error('memcached set failed')
             self.log.debug('已刷新actoken: {} & expires_in {}'.format(self.ac_token, expires))
         return self
