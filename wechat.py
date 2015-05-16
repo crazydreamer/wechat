@@ -1,10 +1,11 @@
 # coding=utf-8
+import random
+import string
 from urllib2 import urlopen
 from os import linesep
 import json
 from hashlib import sha1, md5
 import config as conf
-import common
 from common import get_cache, get_logger
 from msgtype import TEXT, IMAGE, MUSIC, NEWS, VOICE, VIDEO
 from time import time
@@ -397,6 +398,33 @@ class Wechat(object):
         else:
             result = json.load(r)
             return self._checkError(result)
+
+    def get_jsapi_config(self, url, *args, **kwargs):
+        key = 'jsapi_ticket{}'.format(self.appid)
+        ticket_value = self.cache.get(key)
+        if not ticket_value:
+            ticket = self._httpReq(conf.JSAPI_TICKET)
+            expires, ticket_value = ticket['expires_in'], ticket['ticket']
+            if not self.cache.set(key, ticket_value, time=expires):
+                self.log.error(key + ' set cache failed')
+            self.log.debug('已刷新jsapi_ticket: {} & expires_in {}'.format(ticket_value, expires))
+
+        timeStamp = int(time())
+        nonceStr = ''.join(random.choice(string.letters) for i in range(10))
+        sign = dict(
+            timeStamp=timeStamp,
+            nonceStr=nonceStr,
+            url=url,
+            jsapi_ticket=ticket_value
+        )
+        config = dict(
+            appId=self.appid,
+            timeStamp=timeStamp,
+            nonceStr=nonceStr,
+            jsApiList=args,
+            signature=self._sign(self._sign_setup(sign))
+        )
+        return json.dumps(config)
 
 
 class Button(dict):
