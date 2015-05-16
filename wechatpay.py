@@ -1,7 +1,6 @@
 # coding=utf-8
 import random, string, os
 from requests import post
-from hashlib import md5
 from time import time, strftime
 from xmltodict import parse, unparse
 from simplejson import dumps
@@ -46,13 +45,11 @@ class WechatPayBase(Wechat):
         self.mch_id = mch_id
         self.payKey = payKey
 
-    def _sign(self, parameters):
-        keys = sorted(parameters.keys())
-        _ = [u'{}={}'.format(k, parameters[k]) for k in keys if parameters[k]]
-        _.append(u'key={}'.format(self.payKey))
-        sighstr = '&'.join(_).encode('utf8')
-        return md5(sighstr).hexdigest().upper()
-
+    def _sign(self, parameters, *args):
+        _super = super(WechatPayBase, self)
+        sign_args = _super._sign_setup(parameters)
+        sign_args.append(u'key={}'.format(self.payKey))
+        return _super._sign(sign_args, *args)
 
     def _createXML(self, parameters):
         parameters.update(dict(

@@ -11,7 +11,6 @@ from time import time
 from urllib import quote
 
 
-
 def valid(token, signature, timestamp, nonce):
     '''
     验证消息真实性,每次开发者接收用户消息的时候，微信也都会带上前面三个参数
@@ -78,6 +77,14 @@ class Wechat(object):
 
     # #####通用方法######
 
+    def _sign_setup(self, parameters):
+        keys = sorted(parameters.keys())
+        return [u'{}={}'.format(k, parameters[k]) for k in keys if parameters[k]]
+
+    def _sign(self, sign_args, method=md5):
+        sighstr = '&'.join(sign_args).encode('utf8')
+        return method(sighstr).hexdigest().upper()
+
     def _checkError(self, result):
         '''
         检查微信响应的信息有无错误(微信总是响应"{"开头的json),无错则返回结果
@@ -133,7 +140,7 @@ class Wechat(object):
             self.ac_token = result['access_token']
             expires = result['expires_in']
             c_result = self.cache.set(key, self.ac_token, expires)
-            if not c_result: self.log.error('memcached set failed')
+            if not c_result: self.log.error(key + ' set cache failed')
             self.log.debug('已刷新actoken: {} & expires_in {}'.format(self.ac_token, expires))
         return self
 
