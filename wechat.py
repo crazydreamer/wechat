@@ -409,18 +409,18 @@ class Wechat(object):
                 self.log.error(key + ' set cache failed')
             self.log.debug('已刷新jsapi_ticket: {} & expires_in {}'.format(ticket_value, expires))
 
-        timeStamp = int(time())
-        nonceStr = ''.join(random.choice(string.letters) for i in range(10))
+        timestamp = int(time())
+        noncestr = ''.join(random.choice(string.letters) for i in range(10))
         sign = dict(
-            timeStamp=timeStamp,
-            nonceStr=nonceStr,
+            timestamp=timestamp,
+            noncestr=noncestr,
             url=url,
             jsapi_ticket=ticket_value
         )
         config = dict(
             appId=self.appid,
-            timeStamp=timeStamp,
-            nonceStr=nonceStr,
+            timestamp=timestamp,
+            nonceStr=noncestr,
             jsApiList=args,
             signature=self._sign(self._sign_setup(sign))
         )
