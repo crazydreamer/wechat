@@ -422,7 +422,7 @@ class Wechat(object):
             timestamp=timestamp,
             nonceStr=noncestr,
             jsApiList=args,
-            signature=self._sign(self._sign_setup(sign))
+            signature=self._sign(self._sign_setup(sign), sha1)
         )
         return json.dumps(config)
 
